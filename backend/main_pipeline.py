@@ -1,34 +1,39 @@
 import sys
 import os
 
-print("PIPELINE READY")
-
-# add scrape folder
-sys.path.append(os.path.abspath("../scrape"))
+# Add scrape folder to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../scrape")))
 
 from main_scraper import get_all_data
-from gemini_processor import analyze_data
+from gemini_processor import analyze
 
 
-def run_pipeline():
+def run_pipeline(role="Institute Owner"):
     try:
         data = get_all_data()
 
         if not data:
             return {
-                "competitor_updates": [],
-                "user_pain_points": [],
-                "emerging_trends": []
+                "daily_brief": "No data available.",
+                "top_articles": [],
+                "top_trends": [],
+                "growth_opportunities": [],
+                "threats": [],
+                "missed_opportunities": [],
+                "strategic_moves": [],
+                "tools_to_watch": [],
+                "hiring_signals": []
             }
 
-        result = analyze_data(data)
+        result = analyze(data[:6], role)
         return result
 
     except Exception as e:
         print("PIPELINE ERROR:", e)
+        return {"error": str(e)}
 
-        return {
-            "competitor_updates": [],
-            "user_pain_points": [],
-            "emerging_trends": []
-        }
+
+if __name__ == "__main__":
+    import json
+    result = run_pipeline()
+    print(json.dumps(result, indent=2))

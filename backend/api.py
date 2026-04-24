@@ -1,14 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
-from datetime import datetime
-import random
+from fastapi.responses import StreamingResponse
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
+import io
 
-from main_pipeline import run_pipeline
+from scraper import scrape_news
+from cleaner import clean_articles
+from ranker import rank_news
+from gemini_processor import analyze
+from pdf_report import build_pdf
 
-app = FastAPI()
+app = FastAPI(title="Morning Pulse AI", version="1.0.0")
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,148 +21,73 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------- SAFE CLEANER ----------
-def clean_list(arr):
-    if not isinstance(arr, list):
-        return []
+# In-memory cache: {role: result}
+_cache = {}
 
-    cleaned = []
-
-    for item in arr:
-        text = str(item)
-
-        # remove quota errors
-        if "429" in text:
-            continue
-        if "quota" in text.lower():
-            continue
-        if "googleapis" in text.lower():
-            continue
-
-        cleaned.append(text)
-
-    return cleaned[:6]
+executor = ThreadPoolExecutor(max_workers=4)
 
 
-# ---------- REPORT ----------
+def _run_pipeline(role: str):
+    """Synchronous pipeline — scrape, clean, rank, analyze"""
+    news = scrape_news(role)
+    if not news:
+        raise ValueError("No articles scraped. Check network or RSS feeds.")
+    news = clean_articles(news)
+    news = rank_news(news)
+    top_news = news[:6]
+    return analyze(top_news, role)
+
+
 @app.get("/report")
-def report():
+async def report(role: str = "Institute Owner"):
+    if role in _cache:
+        return _cache[role]
+
     try:
-        data = run_pipeline()
-
-        competitor = clean_list(data.get("competitor_updates", []))
-        pain = clean_list(data.get("user_pain_points", []))
-        trends = clean_list(data.get("emerging_trends", []))
-
-        # fallback if empty
-        if len(competitor) == 0:
-            competitor = [
-                "Live competitor signals being collected from news feeds."
-            ]
-
-        if len(pain) == 0:
-            pain = [
-                "Teacher productivity and retention remain major concerns."
-            ]
-
-        if len(trends) == 0:
-            trends = [
-                "AI adoption in classrooms continues rising globally."
-            ]
-
-        source_count = len(competitor) + len(pain) + len(trends)
-
-        return {
-            "summary":
-                "EdTech investment cools while AI classroom tools and school automation continue rising.",
-
-            "competitor_updates": competitor,
-            "user_pain_points": pain,
-            "emerging_trends": trends,
-
-            "source_count": source_count,
-
-            "last_updated":
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-
-            "ai_adoption_score":
-                random.randint(72, 93),
-
-            "market_sentiment":
-                random.choice(
-                    ["Bullish", "Positive", "Neutral"]
-                ),
-
-            "trend_momentum":
-                [
-                    random.randint(60, 70),
-                    random.randint(68, 75),
-                    random.randint(72, 80),
-                    random.randint(76, 86),
-                    random.randint(80, 92),
-                ],
-
-            "recommended_actions": [
-                "Launch AI productivity tools for teachers",
-                "Target school automation segment",
-                "Track competitor funding moves",
-                "Expand B2B district partnerships"
-            ]
-        }
-
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(executor, _run_pipeline, role)
+        _cache[role] = result
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        return {
-            "summary": "Fallback live mode active.",
-            "competitor_updates": [
-                "News feeds refreshing..."
-            ],
-            "user_pain_points": [
-                "Teacher retention concerns rising."
-            ],
-            "emerging_trends": [
-                "AI classroom adoption rising."
-            ],
-            "source_count": 3,
-            "last_updated":
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "ai_adoption_score": 80,
-            "market_sentiment": "Neutral",
-            "trend_momentum": [65, 70, 74, 78, 82],
-            "recommended_actions": [
-                "Retry after some time"
-            ]
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# ---------- TXT DOWNLOAD ----------
-@app.get("/download")
-def download():
-    data = report()
+@app.get("/download-report")
+async def download_report(role: str = "Institute Owner"):
+    # Use cached data if available, otherwise run pipeline
+    if role not in _cache:
+        try:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(executor, _run_pipeline, role)
+            _cache[role] = result
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-    text = f"""
-MORNING PULSE REPORT
+    data = _cache[role]
 
-Summary:
-{data['summary']}
+    try:
+        pdf_bytes = build_pdf(data, role)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
 
-Competitor Updates:
-- """ + "\n- ".join(data["competitor_updates"]) + """
+    safe_role = role.replace("/", "-").replace(" ", "_")
+    filename  = f"MorningPulse_{safe_role}_{__import__('datetime').datetime.now().strftime('%Y%m%d')}.pdf"
 
-User Pain Points:
-- """ + "\n- ".join(data["user_pain_points"]) + """
-
-Emerging Trends:
-- """ + "\n- ".join(data["emerging_trends"]) + """
-
-AI Adoption Score: """ + str(data["ai_adoption_score"]) + """%
-Sentiment: """ + data["market_sentiment"] + """
-
-Generated: """ + data["last_updated"]
-
-    return PlainTextResponse(
-        text,
-        headers={
-            "Content-Disposition":
-                "attachment; filename=MorningPulseReport.txt"
-        }
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.delete("/cache")
+def clear_cache():
+    _cache.clear()
+    return {"status": "cache cleared", "message": "All cached reports removed"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "cached_roles": list(_cache.keys())}
