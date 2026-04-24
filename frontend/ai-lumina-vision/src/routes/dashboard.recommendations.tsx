@@ -128,7 +128,10 @@ function Recs() {
                   </span>
                 ))}
               </div>
-              <button className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[oklch(0.85_0.18_200)] hover:text-[oklch(0.7_0.24_255)]">
+              <button 
+                onClick={() => window.open(`/dashboard/chatbot?prompt=${encodeURIComponent(`Help me implement: ${r.title}`)}`, '_self')}
+                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[oklch(0.85_0.18_200)] hover:text-[oklch(0.7_0.24_255)]"
+              >
                 Apply now <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
               </button>
             </div>

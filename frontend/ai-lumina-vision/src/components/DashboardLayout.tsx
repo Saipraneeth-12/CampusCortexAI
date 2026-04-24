@@ -4,15 +4,17 @@ import {
   Radar,
   TrendingUp,
   Sparkles,
-  FileText,
   Settings,
   Bell,
   Cpu,
   Newspaper,
+  Bot,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { RoleSelector } from "./RoleSelector";
-import { AIChatbot } from "./AIChatbot";
 import { useRole, ROLE_META } from "@/context/RoleContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const navItems = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -20,6 +22,7 @@ const navItems = [
   { to: "/dashboard/competitors", label: "Competitor Radar", icon: Radar },
   { to: "/dashboard/trends", label: "Trend Forecast", icon: TrendingUp },
   { to: "/dashboard/recommendations", label: "AI Recommendations", icon: Sparkles },
+  { to: "/dashboard/chatbot", label: "AI Chatbot", icon: Bot },
   { to: "/dashboard/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -27,9 +30,10 @@ export function DashboardLayout() {
   const location = useLocation();
   const { role } = useRole();
   const meta = ROLE_META[role];
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="relative min-h-screen">
+    <div className="min-h-screen">
       <div className="grid-bg pointer-events-none fixed inset-0 -z-10" />
 
       <div className="flex min-h-screen">
@@ -116,6 +120,19 @@ export function DashboardLayout() {
               {/* Global role selector */}
               <RoleSelector />
 
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="relative grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-white/5 transition-all hover:bg-white/10"
+                title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 text-[oklch(0.82_0.17_75)]" />
+                ) : (
+                  <Moon className="h-4 w-4 text-[oklch(0.5_0.24_255)]" />
+                )}
+              </button>
+
               <button className="relative grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-white/5 transition-colors hover:bg-white/10">
                 <Bell className="h-4 w-4" />
                 <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[oklch(0.72_0.27_340)] shadow-[0_0_8px_oklch(0.72_0.27_340)]" />
@@ -134,9 +151,6 @@ export function DashboardLayout() {
           </main>
         </div>
       </div>
-
-      {/* Global AI Chatbot */}
-      <AIChatbot />
     </div>
   );
 }

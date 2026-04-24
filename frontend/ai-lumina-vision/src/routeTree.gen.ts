@@ -17,6 +17,7 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settin
 import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
 import { Route as DashboardRecommendationsRouteImport } from './routes/dashboard.recommendations'
 import { Route as DashboardCompetitorsRouteImport } from './routes/dashboard.competitors'
+import { Route as DashboardChatbotRouteImport } from './routes/dashboard.chatbot'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -59,10 +60,16 @@ const DashboardCompetitorsRoute = DashboardCompetitorsRouteImport.update({
   path: '/competitors',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardChatbotRoute = DashboardChatbotRouteImport.update({
+  id: '/chatbot',
+  path: '/chatbot',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/chatbot': typeof DashboardChatbotRoute
   '/dashboard/competitors': typeof DashboardCompetitorsRoute
   '/dashboard/recommendations': typeof DashboardRecommendationsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard/chatbot': typeof DashboardChatbotRoute
   '/dashboard/competitors': typeof DashboardCompetitorsRoute
   '/dashboard/recommendations': typeof DashboardRecommendationsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/chatbot': typeof DashboardChatbotRoute
   '/dashboard/competitors': typeof DashboardCompetitorsRoute
   '/dashboard/recommendations': typeof DashboardRecommendationsRoute
   '/dashboard/reports': typeof DashboardReportsRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/dashboard/chatbot'
     | '/dashboard/competitors'
     | '/dashboard/recommendations'
     | '/dashboard/reports'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dashboard/chatbot'
     | '/dashboard/competitors'
     | '/dashboard/recommendations'
     | '/dashboard/reports'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/dashboard/chatbot'
     | '/dashboard/competitors'
     | '/dashboard/recommendations'
     | '/dashboard/reports'
@@ -185,10 +197,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCompetitorsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/chatbot': {
+      id: '/dashboard/chatbot'
+      path: '/chatbot'
+      fullPath: '/dashboard/chatbot'
+      preLoaderRoute: typeof DashboardChatbotRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardChatbotRoute: typeof DashboardChatbotRoute
   DashboardCompetitorsRoute: typeof DashboardCompetitorsRoute
   DashboardRecommendationsRoute: typeof DashboardRecommendationsRoute
   DashboardReportsRoute: typeof DashboardReportsRoute
@@ -198,6 +218,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardChatbotRoute: DashboardChatbotRoute,
   DashboardCompetitorsRoute: DashboardCompetitorsRoute,
   DashboardRecommendationsRoute: DashboardRecommendationsRoute,
   DashboardReportsRoute: DashboardReportsRoute,

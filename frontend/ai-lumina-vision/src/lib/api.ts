@@ -72,6 +72,19 @@ export interface ChatMessage {
   competitors?: Record<string, unknown>;
 }
 
+export interface Trend {
+  name: string;
+  growth: number;
+  confidence: number;
+  color: string;
+  desc: string;
+  forecast: number[];
+}
+
+export interface TrendsResponse {
+  trends: Trend[];
+}
+
 // ── Fetch helpers ─────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -92,6 +105,9 @@ export const api = {
 
   getCompetitors: (role: string) =>
     apiFetch<CompetitorResponse>(`/competitor-alerts?role=${encodeURIComponent(role)}`),
+
+  getTrends: (role: string) =>
+    apiFetch<TrendsResponse>(`/trends?role=${encodeURIComponent(role)}`),
 
   downloadReport: (role: string) =>
     `${API_BASE}/download-report?role=${encodeURIComponent(role)}`,

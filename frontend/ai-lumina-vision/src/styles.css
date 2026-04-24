@@ -115,6 +115,58 @@
   --sidebar-ring: oklch(0.7 0.24 255);
 }
 
+/* ── Light theme overrides ───────────────────────────────────────────────── */
+:root.light {
+  --background: oklch(0.97 0.005 240);
+  --foreground: oklch(0.15 0.03 265);
+
+  --card: oklch(1 0 0 / 0.85);
+  --card-foreground: oklch(0.15 0.03 265);
+
+  --popover: oklch(0.99 0.005 240);
+  --popover-foreground: oklch(0.15 0.03 265);
+
+  --primary: oklch(0.55 0.22 265);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.92 0.02 265);
+  --secondary-foreground: oklch(0.2 0.04 265);
+
+  --muted: oklch(0.93 0.01 265);
+  --muted-foreground: oklch(0.45 0.04 260);
+
+  --accent: oklch(0.6 0.2 220);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.55 0.27 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.15 0.02 265 / 0.12);
+  --input: oklch(0.15 0.02 265 / 0.08);
+  --ring: oklch(0.55 0.22 265);
+
+  --neon-blue: oklch(0.5 0.24 255);
+  --neon-purple: oklch(0.5 0.28 300);
+  --neon-cyan: oklch(0.45 0.18 200);
+  --neon-pink: oklch(0.52 0.27 340);
+  --success: oklch(0.45 0.2 155);
+  --warning: oklch(0.5 0.17 75);
+
+  --gradient-primary: linear-gradient(135deg, oklch(0.5 0.24 255), oklch(0.5 0.28 300));
+  --gradient-cyan: linear-gradient(135deg, oklch(0.45 0.18 200), oklch(0.5 0.24 255));
+  --shadow-card: 0 4px 24px 0 oklch(0.15 0.03 265 / 0.1);
+  --shadow-elevated: 0 12px 40px -8px oklch(0.5 0.24 255 / 0.2);
+
+  --sidebar: oklch(0.96 0.01 265 / 0.9);
+  --sidebar-foreground: oklch(0.15 0.03 265);
+  --sidebar-primary: oklch(0.5 0.24 255);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.92 0.02 265);
+  --sidebar-accent-foreground: oklch(0.2 0.04 265);
+  --sidebar-border: oklch(0.15 0.02 265 / 0.1);
+  --sidebar-ring: oklch(0.5 0.24 255);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -128,12 +180,22 @@
   }
 
   body {
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  :root:not(.light) body {
     background-image:
       radial-gradient(at 15% 10%, oklch(0.65 0.28 300 / 0.15), transparent 50%),
       radial-gradient(at 85% 0%, oklch(0.7 0.24 255 / 0.18), transparent 50%),
       radial-gradient(at 50% 100%, oklch(0.85 0.18 200 / 0.1), transparent 50%);
-    background-attachment: fixed;
-    min-height: 100vh;
+  }
+
+  :root.light body {
+    background-image:
+      radial-gradient(at 15% 10%, oklch(0.7 0.15 255 / 0.08), transparent 50%),
+      radial-gradient(at 85% 0%, oklch(0.65 0.12 300 / 0.06), transparent 50%),
+      radial-gradient(at 50% 100%, oklch(0.6 0.1 200 / 0.05), transparent 50%);
   }
 
   h1, h2, h3, h4 {
@@ -166,6 +228,31 @@
     background: oklch(0.18 0.04 265 / 0.75);
     backdrop-filter: blur(28px) saturate(160%);
     border: 1px solid oklch(1 0 0 / 0.1);
+  }
+
+  :root.light .glass {
+    background: oklch(1 0 0 / 0.7);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid oklch(0.15 0.02 265 / 0.1);
+  }
+
+  :root.light .glass-strong {
+    background: oklch(1 0 0 / 0.88);
+    backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid oklch(0.15 0.02 265 / 0.12);
+  }
+
+  :root.light .grid-bg {
+    background-image:
+      linear-gradient(oklch(0.5 0.24 255 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.5 0.24 255 / 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  :root.light .neon-border::before {
+    background: linear-gradient(135deg, oklch(0.5 0.24 255 / 0.35), oklch(0.5 0.28 300 / 0.35), transparent);
   }
 
   .gradient-text {

@@ -90,6 +90,21 @@ export function InlineChatbot() {
   const inputRef = useRef<HTMLInputElement>(null);
   const recognRef = useRef<{ stop: () => void } | null>(null);
 
+  // Check for URL query parameter on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const prompt = params.get("prompt");
+      if (prompt) {
+        setInput(prompt);
+        // Clear the URL parameter
+        window.history.replaceState({}, "", window.location.pathname);
+        // Auto-focus the input
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
@@ -347,8 +362,7 @@ export function AIChatbot() {
         onClick={() => setOpen(true)}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] shadow-[0_0_32px_oklch(0.7_0.24_265/0.6)]"
-        style={{ display: open ? "none" : "flex" }}
+        className={`fixed bottom-6 right-6 z-50 h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] shadow-[0_0_32px_oklch(0.7_0.24_265/0.6)] ${open ? "hidden" : "flex"}`}
       >
         <Bot className="h-6 w-6 text-white" />
         <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[oklch(0.72_0.27_340)] text-[9px] font-bold text-white">AI</span>

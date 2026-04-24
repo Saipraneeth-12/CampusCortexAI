@@ -207,6 +207,73 @@ function Competitors() {
         </div>
       )}
 
+      {/* Executive Summary */}
+      <div className="glass-strong neon-border relative overflow-hidden rounded-3xl p-6 md:p-8">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,oklch(0.72_0.27_340/0.25),transparent_55%)]" />
+        <div className="relative flex flex-wrap items-center justify-between gap-6">
+          <div className="flex-1 max-w-2xl">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">Competitive Intelligence Summary</p>
+            {loading ? (
+              <div className="space-y-2">
+                <div className="h-4 w-3/4 rounded bg-white/10 animate-pulse" />
+                <div className="h-4 w-2/3 rounded bg-white/10 animate-pulse" />
+                <div className="h-4 w-5/6 rounded bg-white/10 animate-pulse" />
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {(() => {
+                  const allMoves = [...fresh, ...trending];
+                  const bullets: { text: string; color: string }[] = [];
+
+                  // Real competitor moves as bullet points
+                  allMoves.slice(0, 4).forEach((c) => {
+                    const urgColor =
+                      c.urgency >= 8
+                        ? "bg-[oklch(0.72_0.27_340)]"
+                        : c.urgency >= 5
+                        ? "bg-[oklch(0.82_0.17_75)]"
+                        : "bg-[oklch(0.78_0.2_155)]";
+                    bullets.push({
+                      text: `${c.competitor} — ${c.move.length > 80 ? c.move.slice(0, 80) + "…" : c.move}`,
+                      color: urgColor,
+                    });
+                  });
+
+                  // Fallback if no data
+                  if (bullets.length === 0) {
+                    return (
+                      <p className="text-sm text-muted-foreground">
+                        No competitor activity detected. Click Refresh to scan.
+                      </p>
+                    );
+                  }
+
+                  return bullets.map((b, i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${b.color}`} />
+                      <p className="text-sm leading-relaxed text-foreground/90">{b.text}</p>
+                    </div>
+                  ));
+                })()}
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { l: "Competitors", v: "10" },
+              { l: "Fresh Moves", v: loading ? "—" : `${fresh.length}` },
+              { l: "Trending", v: loading ? "—" : `${trending.length}` },
+              { l: "Total Alerts", v: loading ? "—" : `${data?.total ?? 0}` },
+            ].map((s) => (
+              <div key={s.l} className="glass min-w-[90px] rounded-xl p-3 text-center">
+                <div className="font-display text-xl font-bold gradient-text-pink">{s.v}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Fresh */}
       <section>
         <div className="mb-4 flex items-center gap-3">

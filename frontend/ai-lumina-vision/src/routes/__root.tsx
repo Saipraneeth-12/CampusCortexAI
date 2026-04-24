@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { RoleProvider } from "@/context/RoleContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 import appCss from "../styles.css?url";
 
@@ -70,8 +71,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <RoleProvider>
-      <Outlet />
-    </RoleProvider>
+    <ThemeProvider>
+      <RoleProvider>
+        <Outlet />
+      </RoleProvider>
+    </ThemeProvider>
   );
 }
