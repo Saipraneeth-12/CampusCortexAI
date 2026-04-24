@@ -1,13 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./App.css";
 
-const ROLES = [
-  "Institute Owner",
-  "Backend Developer",
-  "Data Engineer",
-  "Founder / Entrepreneur",
-  "Product Builder",
-];
+const ROLES = ["CEO / Founder"];
 
 const URGENCY_COLOR = (score) => {
   if (score >= 8) return "#ef4444";
@@ -195,9 +189,270 @@ function IntelBlock({ blockData, compAlerts, compLoading, label, accentColor, ic
   );
 }
 
+// ── Chatbot ───────────────────────────────────────────────────────────────────
+const SUGGESTIONS = [
+  "What's the biggest threat to me today?",
+  "Give me a 7-day action plan",
+  "Which competitor should I worry about most?",
+  "What opportunities should I act on now?",
+  "Summarize today's report in 3 sentences",
+  "What skills should I focus on this week?",
+];
+
+// Strip markdown so TTS reads cleanly
+function stripMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/#{1,6}\s/g, "")
+    .replace(/`{1,3}[^`]*`{1,3}/g, "")
+    .replace(/\n{2,}/g, ". ")
+    .replace(/\n/g, " ")
+    .trim();
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(stripMarkdown(text));
+  utt.lang  = "en-US";
+  utt.rate  = 1.0;
+  utt.pitch = 1.0;
+  // prefer a natural English voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v =>
+    v.lang === "en-US" && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Samantha"))
+  ) || voices.find(v => v.lang.startsWith("en"));
+  if (preferred) utt.voice = preferred;
+  window.speechSynthesis.speak(utt);
+}
+
+function stopSpeaking() {
+  window.speechSynthesis?.cancel();
+}
+
+function Chatbot({ role, data, competitors }) {
+  const [open, setOpen]           = useState(false);
+  const [input, setInput]         = useState("");
+  const [history, setHistory]     = useState([]);
+  const [thinking, setThinking]   = useState(false);
+  const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking]   = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+  const bottomRef  = useRef(null);
+  const recognRef  = useRef(null);
+  const inputRef   = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [history, thinking]);
+
+  useEffect(() => { setHistory([]); }, [role]);
+
+  // Track TTS speaking state
+  useEffect(() => {
+    if (!window.speechSynthesis) return;
+    const interval = setInterval(() => {
+      setSpeaking(window.speechSynthesis.speaking);
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendMessage = async (msg) => {
+    const text = (msg || input).trim();
+    if (!text || thinking) return;
+    stopSpeaking();
+    setInput("");
+    const newHistory = [...history, { role: "user", content: text }];
+    setHistory(newHistory);
+    setThinking(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role,
+          message: text,
+          history: newHistory.slice(-6),
+          competitors: competitors || {},
+        }),
+      });
+      const json  = await res.json();
+      const reply = json.reply || json.detail || "No response.";
+      setHistory(h => [...h, { role: "assistant", content: reply }]);
+      if (autoSpeak) speak(reply);
+    } catch (e) {
+      const err = "Connection error. Make sure the backend is running.";
+      setHistory(h => [...h, { role: "assistant", content: err }]);
+    } finally {
+      setThinking(false);
+    }
+  };
+
+  const startListening = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert("Voice input not supported in this browser. Use Chrome."); return; }
+    stopSpeaking();
+    const recog = new SR();
+    recog.lang        = "en-US";
+    recog.continuous  = false;
+    recog.interimResults = false;
+    recog.onstart  = () => setListening(true);
+    recog.onend    = () => setListening(false);
+    recog.onerror  = () => setListening(false);
+    recog.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      setInput(transcript);
+      // auto-send after short delay so user sees what was heard
+      setTimeout(() => sendMessage(transcript), 400);
+    };
+    recog.start();
+    recognRef.current = recog;
+  };
+
+  const stopListening = () => {
+    recognRef.current?.stop();
+    setListening(false);
+  };
+
+  const replayLast = () => {
+    const lastBot = [...history].reverse().find(m => m.role === "assistant");
+    if (lastBot) speak(lastBot.content);
+  };
+
+  return (
+    <>
+      {/* Floating bubble */}
+      <button className="chat-bubble" onClick={() => setOpen(o => !o)} title="Ask Morning Pulse AI">
+        {open ? "✕" : "💬"}
+        {history.length > 0 && !open && (
+          <span className="chat-badge">{history.filter(h => h.role === "assistant").length}</span>
+        )}
+      </button>
+
+      {open && (
+        <div className="chat-panel">
+          {/* Header */}
+          <div className="chat-header">
+            <div>
+              <div className="chat-title">🧠 Morning Pulse Advisor</div>
+              <div className="chat-sub">Live report · {role} · Voice enabled</div>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {/* Auto-speak toggle */}
+              <button
+                className={`chat-icon-btn ${autoSpeak ? "active" : ""}`}
+                onClick={() => { setAutoSpeak(a => !a); stopSpeaking(); }}
+                title={autoSpeak ? "Auto-speak ON (click to mute)" : "Auto-speak OFF (click to enable)"}
+              >
+                {autoSpeak ? "🔊" : "🔇"}
+              </button>
+              {/* Replay last response */}
+              <button
+                className="chat-icon-btn"
+                onClick={replayLast}
+                disabled={!history.some(m => m.role === "assistant")}
+                title="Replay last response"
+              >
+                ▶
+              </button>
+              {/* Stop speaking */}
+              {speaking && (
+                <button className="chat-icon-btn" onClick={stopSpeaking} title="Stop speaking">⏹</button>
+              )}
+              <button className="chat-close" onClick={() => { setOpen(false); stopSpeaking(); }}>✕</button>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className="chat-messages">
+            {history.length === 0 && (
+              <div className="chat-welcome">
+                <div className="chat-welcome-icon">🧠</div>
+                <div className="chat-welcome-text">
+                  Ask me anything about today's market intelligence.<br />
+                  <span style={{ fontSize: 11, color: "#475569" }}>
+                    Type, press Enter, or tap 🎤 to speak
+                  </span>
+                </div>
+                <div className="chat-suggestions">
+                  {SUGGESTIONS.map((s, i) => (
+                    <button key={i} className="chat-suggestion" onClick={() => sendMessage(s)}>{s}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {history.map((msg, i) => (
+              <div key={i} className={`chat-msg ${msg.role === "user" ? "chat-msg-user" : "chat-msg-bot"}`}>
+                {msg.role === "assistant" && (
+                  <button
+                    className="chat-avatar-btn"
+                    onClick={() => speak(msg.content)}
+                    title="Read aloud"
+                  >🧠</button>
+                )}
+                <div className="chat-bubble-text">{msg.content}</div>
+                {msg.role === "user" && <span className="chat-user-icon">👤</span>}
+              </div>
+            ))}
+
+            {thinking && (
+              <div className="chat-msg chat-msg-bot">
+                <span className="chat-avatar">🧠</span>
+                <div className="chat-thinking"><span /><span /><span /></div>
+              </div>
+            )}
+
+            {listening && (
+              <div className="chat-msg chat-msg-bot">
+                <span className="chat-avatar">🎤</span>
+                <div className="chat-listening">Listening... speak now</div>
+              </div>
+            )}
+
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Input row */}
+          <div className="chat-input-row">
+            {/* Voice input button */}
+            <button
+              className={`chat-mic-btn ${listening ? "listening" : ""}`}
+              onClick={listening ? stopListening : startListening}
+              disabled={thinking || !data}
+              title={listening ? "Stop listening" : "Speak your question"}
+            >
+              🎤
+            </button>
+
+            <input
+              ref={inputRef}
+              className="chat-input"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && sendMessage()}
+              placeholder={listening ? "Listening..." : "Ask about today's market..."}
+              disabled={thinking || !data || listening}
+            />
+
+            <button
+              className="chat-send"
+              onClick={() => sendMessage()}
+              disabled={thinking || !input.trim() || !data}
+            >➤</button>
+          </div>
+
+          {!data && <div className="chat-no-data">Load a report first to enable the advisor.</div>}
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [role, setRole]               = useState("Institute Owner");
+  const [role, setRole] = useState("CEO / Founder");
   const [data, setData]               = useState(null);
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState(null);
@@ -332,6 +587,8 @@ export default function App() {
       <footer className="footer">
         Morning Pulse AI © 2026 · Powered by Gemini + Real-Time News · Role: {role}
       </footer>
+
+      <Chatbot role={role} data={data} competitors={competitors} />
     </div>
   );
 }

@@ -3,70 +3,51 @@ import time
 import json
 import google.generativeai as genai
 
-API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD7Az9AKrwyAzWcUvv6QYHF2IMZTlxksQ4")
+API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyATBCBbduInSpu3-OiMagrfWeQLxkocKpg")
 genai.configure(api_key=API_KEY)
 
 # Full fallback chain — every model that supports generateContent
 MODEL_FALLBACK = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-lite-001",
-    "gemini-2.5-flash-lite",
-    "gemini-flash-latest",
-    "gemini-flash-lite-latest",
-    "gemini-pro-latest",
-    "gemma-3-27b-it",
-    "gemma-3-12b-it",
-    "gemma-3-4b-it",
+    "gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-001",
+    "gemini-2.0-flash-lite", "gemini-2.5-flash-lite", "gemini-flash-latest",
+    "gemini-flash-lite-latest", "gemini-pro-latest",
+    "gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it",
 ]
-
-# Track which models are quota-exhausted this session
 _exhausted: set = set()
 
 
-def _pick_model():
-    """Return (model, model_name) for the first non-exhausted model."""
+def _call_gemini(prompt: str, model_name: str) -> str:
+    """Single model call — raises on quota, returns text on success."""
+    m = genai.GenerativeModel(model_name)
+    response = m.generate_content(
+        prompt,
+        generation_config=genai.GenerationConfig(temperature=0.4, max_output_tokens=8192),
+    )
+    return response.text.strip()
+
+
+def _try_all_models(prompt: str) -> str:
+    """Try every model in fallback order, skip exhausted ones."""
+    last_err = None
     for name in MODEL_FALLBACK:
         if name in _exhausted:
             continue
         try:
-            m = genai.GenerativeModel(name)
-            # lightweight probe
-            m.generate_content("hi", request_options={"timeout": 8})
-            print(f"[gemini] Using model: {name}")
-            return m, name
+            text = _call_gemini(prompt, name)
+            print(f"[gemini] Success with {name}")
+            return text
         except Exception as e:
             err = str(e)
-            if "429" in err or "quota" in err.lower():
-                print(f"[gemini] {name} quota exhausted, trying next...")
+            if "429" in err or "quota" in err.lower() or "RESOURCE_EXHAUSTED" in err:
+                print(f"[gemini] {name} quota exhausted")
                 _exhausted.add(name)
-            else:
-                # model exists but probe failed for another reason — still use it
-                print(f"[gemini] Using model (probe failed): {name}")
-                return genai.GenerativeModel(name), name
-    raise RuntimeError("All Gemini models are quota-exhausted. Try again tomorrow or add a new API key.")
-
-
-# Pick best available model at startup
-try:
-    _model, _model_name = _pick_model()
-except RuntimeError as e:
-    print(f"[gemini] WARNING: {e}")
-    _model = genai.GenerativeModel(MODEL_FALLBACK[0])
-    _model_name = MODEL_FALLBACK[0]
-
-
-def _get_model():
-    """Always return a working model, re-picking if current one got exhausted."""
-    global _model, _model_name
-    if _model_name in _exhausted:
-        try:
-            _model, _model_name = _pick_model()
-        except RuntimeError:
-            pass
-    return _model
+                last_err = err
+                continue
+            if "403" in err or "api key" in err.lower() or "API_KEY_INVALID" in err:
+                raise Exception("Invalid API key. Update GEMINI_API_KEY.")
+            last_err = err
+            continue
+    raise Exception(f"All Gemini models exhausted. Last error: {last_err}")
 
 
 def _merge_links(articles, original_news):
@@ -108,37 +89,29 @@ def analyze(news, role):
         {
             "title":       n.get("title", ""),
             "source":      n.get("source", ""),
+            "category":    n.get("_category", "general"),
             "description": n.get("description", "")[:300],
         }
         for n in news
     ]
 
     prompt = f"""
-You are an elite AI Market Intelligence Strategist and Competitive Growth Advisor.
+You are an elite AI Market Intelligence Strategist for a {role}.
 
-Target User Role: {role}
+Analyze these real-time articles. Each article has a category tag:
+- "competitor": competitor updates, product launches, funding, acquisitions
+- "pain_point": user/teacher frustrations, school problems
+- "tech_trend": emerging AI/tech trends in education
 
-Analyze these real-time articles SPECIFICALLY for a {role}.
-Every insight, recommendation, trend, opportunity, and threat must be directly relevant to a {role}.
-Do NOT include generic advice.
+Your job: extract maximum business intelligence for a {role}.
+Every insight must be specific, actionable, and directly relevant.
 
-STEP 1: Filter articles relevant to {role}'s world:
-- Founder / Entrepreneur: startup funding, competitor moves, market gaps, SaaS growth, EdTech investment, monetization, product-market fit
-- Institute Owner: school/college management software, student enrollment, LMS, operations, competitor institutes
-- Backend Developer: backend frameworks, APIs, cloud infra, developer tools, stack trends
-- Data Engineer: data pipelines, ETL, real-time analytics, cloud data platforms, AI data stacks
-- Product Builder: product launches, UX trends, no-code tools, SaaS features, AI product integrations
-Remove: celebrity news, politics, sports, entertainment, crime, spam, duplicates.
-
-STEP 2: Deduplicate — merge articles covering the same story.
-
-STEP 3: Prioritize by: immediate business impact for {role}, funding signals, competitor moves, growth opportunities, new tools, disruption risks.
-
-STEP 4: For each top article fill all fields with real analysis. Make recommended_action specific to {role}.
-
+STEP 1: Filter — keep only relevant articles. Remove generic PR noise, politics, sports, entertainment.
+STEP 2: Deduplicate — merge same-story articles.
+STEP 3: Prioritize — rank by: funding/acquisition signals > product launches > AI adoption > pain points > trends.
+STEP 4: For each top article fill all fields with real analysis.
 STEP 5: Write a CEO-style daily_brief (2-3 sentences) for a {role}.
-
-STEP 6: All lists must be specific to {role}'s context. Minimum 4 items per list.
+STEP 6: All lists must be specific to {role}. Minimum 4 items per list.
 
 Return ONLY valid JSON. No markdown. No text outside JSON:
 
@@ -169,53 +142,19 @@ NEWS ARTICLES:
 {trimmed}
 """
 
-    last_err = None
-    # Try each non-exhausted model
-    for model_name in MODEL_FALLBACK:
-        if model_name in _exhausted:
-            continue
-        try:
-            m = genai.GenerativeModel(model_name)
-            response = m.generate_content(
-                prompt,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.4,
-                    max_output_tokens=8192,
-                )
-            )
-            text = response.text.strip()
-            if "```" in text:
-                text = text.split("```json")[-1].split("```")[0].strip()
-
-            result = json.loads(text)
-
-            required = ["daily_brief", "top_articles", "top_trends", "growth_opportunities", "threats"]
-            if not all(k in result for k in required):
-                raise ValueError("Missing required keys in Gemini response")
-
-            result["top_articles"] = _merge_links(result.get("top_articles", []), news)
-            print(f"[gemini] Analysis complete using {model_name}")
-            return result
-
-        except Exception as e:
-            err = str(e)
-            if "429" in err or "quota" in err.lower():
-                print(f"[gemini] {model_name} quota exhausted during analysis, trying next...")
-                _exhausted.add(model_name)
-                last_err = err
-                continue
-            elif isinstance(e, json.JSONDecodeError):
-                print(f"[gemini] JSON parse error on {model_name}, trying next...")
-                last_err = err
-                continue
-            elif "403" in err or "api key" in err.lower():
-                raise Exception("Invalid API key. Set GEMINI_API_KEY environment variable.")
-            else:
-                last_err = err
-                continue
-
-    print(f"[gemini] All models exhausted. Using fallback response. Last error: {last_err}")
-    return _fallback_response(role, news)
+    try:
+        text = _try_all_models(prompt)
+        if "```" in text:
+            text = text.split("```json")[-1].split("```")[0].strip()
+        result = json.loads(text)
+        required = ["daily_brief", "top_articles", "top_trends", "growth_opportunities", "threats"]
+        if not all(k in result for k in required):
+            raise ValueError("Missing required keys")
+        result["top_articles"] = _merge_links(result.get("top_articles", []), news)
+        return result
+    except Exception as e:
+        print(f"[gemini] analyze failed: {e}")
+        return _fallback_response(role, news)
 
 
 def _empty_response(role):

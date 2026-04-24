@@ -2,8 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from concurrent.futures import ThreadPoolExecutor
+from pydantic import BaseModel
 import asyncio
 import io
+from typing import List
 
 from scraper import scrape_news
 from cleaner import clean_articles
@@ -11,6 +13,7 @@ from ranker import rank_news
 from gemini_processor import analyze
 from pdf_report import build_pdf
 from competitor_tracker import get_competitor_alerts
+from chatbot import chat as chatbot_chat
 
 app = FastAPI(title="Morning Pulse AI", version="1.0.0")
 
@@ -129,6 +132,35 @@ async def competitor_alerts(role: str = "Institute Owner"):
         result = {"alerts": alerts, "total": len(alerts)}
         _cache[cache_key] = result
         return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ChatMessage(BaseModel):
+    role:        str
+    message:     str
+    history:     List[dict] = []
+    competitors: dict = {}
+
+
+@app.post("/chat")
+async def chat_endpoint(body: ChatMessage):
+    report = _cache.get(body.role)
+    if not report:
+        raise HTTPException(status_code=400, detail="No report loaded for this role. Fetch the report first.")
+    try:
+        loop = asyncio.get_event_loop()
+        reply = await loop.run_in_executor(
+            executor,
+            lambda: chatbot_chat(
+                message=body.message,
+                role=body.role,
+                report=report,
+                competitors=body.competitors,
+                history=body.history,
+            )
+        )
+        return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

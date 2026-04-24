@@ -84,29 +84,17 @@ IMPACT_KEYWORDS = {
 
 # ── Role-specific amplifiers ──────────────────────────────────────────────────
 ROLE_AMPLIFIERS = {
-    "Institute Owner": [
-        "school", "college", "institute", "lms", "enrollment", "campus",
-        "teacher", "student", "classroom", "curriculum", "administration",
+    "CEO / Founder": [
+        "startup", "funding", "venture", "saas", "mrr", "arr", "churn",
+        "product market fit", "pivot", "acquisition", "exit", "investor",
+        "seed", "series", "unicorn", "bootstrapped", "ceo", "founder",
+        "scale", "revenue", "growth", "market share",
     ],
-    "Backend Developer": [
-        "api", "backend", "microservices", "fastapi", "django", "node",
-        "cloud", "aws", "docker", "kubernetes", "database", "postgresql",
-        "redis", "graphql", "rest", "grpc", "serverless",
-    ],
-    "Data Engineer": [
-        "pipeline", "etl", "spark", "databricks", "kafka", "airflow",
-        "dbt", "snowflake", "bigquery", "data lake", "warehouse",
-        "streaming", "batch", "analytics", "real-time",
-    ],
+    # legacy alias
     "Founder / Entrepreneur": [
         "startup", "funding", "venture", "saas", "mrr", "arr", "churn",
         "product market fit", "pivot", "acquisition", "exit", "investor",
         "seed", "series", "unicorn", "bootstrapped",
-    ],
-    "Product Builder": [
-        "product", "feature", "ux", "ui", "roadmap", "sprint", "mvp",
-        "user research", "a/b test", "retention", "onboarding", "saas",
-        "no-code", "low-code", "integration", "api",
     ],
 }
 

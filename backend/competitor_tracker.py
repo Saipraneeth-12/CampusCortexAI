@@ -9,7 +9,7 @@ import json
 import google.generativeai as genai
 import os
 
-API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD7Az9AKrwyAzWcUvv6QYHF2IMZTlxksQ4")
+API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyATBCBbduInSpu3-OiMagrfWeQLxkocKpg")
 genai.configure(api_key=API_KEY)
 
 # ── Competitor registry ───────────────────────────────────────────────────────

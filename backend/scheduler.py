@@ -19,13 +19,7 @@ RUN_HOUR   = 19   # 24-hour format  (8 = 8 AM, 19 = 7 PM)
 RUN_MINUTE = 8
 # ─────────────────────────────────────────────────────────────────────────────
 
-ROLES = [
-    "Institute Owner",
-    "Backend Developer",
-    "Data Engineer",
-    "Founder / Entrepreneur",
-    "Product Builder",
-]
+ROLES = ["CEO / Founder"]
 
 scheduler = BlockingScheduler(timezone="Asia/Kolkata")
 
