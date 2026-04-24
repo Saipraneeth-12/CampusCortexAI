@@ -274,3 +274,213 @@ body {
   .stats-row { grid-template-columns: repeat(2, 1fr); }
   .insights-grid { grid-template-columns: 1fr; }
 }
+
+/* ── COMPETITOR RADAR ─────────────────────────────────────────────────────── */
+.comp-section {
+  margin-bottom: 20px;
+}
+
+.comp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.comp-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.comp-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.comp-scanning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 13px;
+  padding: 16px;
+  background: #1a1d27;
+  border-radius: 10px;
+  border: 1px solid #2d3148;
+}
+
+.scan-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulse 1.2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(1.4); }
+}
+
+.comp-card {
+  background: #1a1d27;
+  border: 1px solid #2d3148;
+  border-left: 4px solid #ef4444;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comp-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.comp-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comp-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.comp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 0;
+  border-top: 1px solid #1e2130;
+}
+
+.comp-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #475569;
+}
+
+.comp-text {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.comp-actions-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid #1e2130;
+}
+
+.comp-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.comp-action-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: #e2e8f0;
+  background: #0ea5e911;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.comp-action-num {
+  background: #0ea5e9;
+  color: #0f1117;
+  font-size: 10px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.comp-source {
+  font-size: 11px;
+  color: #475569;
+  border-top: 1px solid #1e2130;
+  padding-top: 8px;
+}
+
+/* ── INTELLIGENCE BLOCKS ─────────────────────────────────────────────────── */
+.intel-block {
+  background: #1a1d27;
+  border: 1px solid #2d3148;
+  border-top: 3px solid;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.intel-block-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid;
+}
+
+.intel-block-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.intel-block-title {
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.intel-block-sub {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.intel-sub-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1e2130;
+}
+
+.comp-empty {
+  font-size: 13px;
+  color: #475569;
+  padding: 12px 0;
+}

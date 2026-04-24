@@ -10,6 +10,7 @@ from cleaner import clean_articles
 from ranker import rank_news
 from gemini_processor import analyze
 from pdf_report import build_pdf
+from competitor_tracker import get_competitor_alerts
 
 app = FastAPI(title="Morning Pulse AI", version="1.0.0")
 
@@ -28,14 +29,49 @@ executor = ThreadPoolExecutor(max_workers=4)
 
 
 def _run_pipeline(role: str):
-    """Synchronous pipeline — scrape, clean, rank, analyze"""
+    """Pipeline that returns fresh + trending blocks separately."""
     news = scrape_news(role)
     if not news:
         raise ValueError("No articles scraped. Check network or RSS feeds.")
     news = clean_articles(news)
-    news = rank_news(news)
-    top_news = news[:6]
-    return analyze(top_news, role)
+    news = rank_news(news, role)
+
+    # Split by tier
+    fresh_news    = [n for n in news if n.get("_tier") == "fresh"][:6]
+    trending_news = [n for n in news if n.get("_tier") in ("trending", "unknown")][:6]
+
+    # Analyze both blocks
+    fresh_result    = analyze(fresh_news, role)    if fresh_news    else _empty_block(role, "fresh")
+    trending_result = analyze(trending_news, role) if trending_news else _empty_block(role, "trending")
+
+    return {
+        "fresh":    fresh_result,
+        "trending": trending_result,
+        # keep top-level fields from fresh for backward compat
+        "daily_brief":          fresh_result.get("daily_brief", ""),
+        "top_trends":           fresh_result.get("top_trends", []),
+        "growth_opportunities": fresh_result.get("growth_opportunities", []),
+        "threats":              fresh_result.get("threats", []),
+        "missed_opportunities": fresh_result.get("missed_opportunities", []),
+        "strategic_moves":      fresh_result.get("strategic_moves", []),
+        "tools_to_watch":       fresh_result.get("tools_to_watch", []),
+        "hiring_signals":       fresh_result.get("hiring_signals", []),
+    }
+
+
+def _empty_block(role, tier):
+    label = "last 48 hours" if tier == "fresh" else "trending past news"
+    return {
+        "daily_brief":          f"No {label} articles found for {role}.",
+        "top_articles":         [],
+        "top_trends":           [],
+        "growth_opportunities": [],
+        "threats":              [],
+        "missed_opportunities": [],
+        "strategic_moves":      [],
+        "tools_to_watch":       [],
+        "hiring_signals":       [],
+    }
 
 
 @app.get("/report")
@@ -80,6 +116,21 @@ async def download_report(role: str = "Institute Owner"):
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.get("/competitor-alerts")
+async def competitor_alerts(role: str = "Institute Owner"):
+    cache_key = f"competitors_{role}"
+    if cache_key in _cache:
+        return _cache[cache_key]
+    try:
+        loop = asyncio.get_event_loop()
+        alerts = await loop.run_in_executor(executor, get_competitor_alerts, role)
+        result = {"alerts": alerts, "total": len(alerts)}
+        _cache[cache_key] = result
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.delete("/cache")
