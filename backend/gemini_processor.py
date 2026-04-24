@@ -6,35 +6,77 @@ import google.generativeai as genai
 API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD7Az9AKrwyAzWcUvv6QYHF2IMZTlxksQ4")
 genai.configure(api_key=API_KEY)
 
-MODEL_FALLBACK = ["gemini-2.5-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-lite"]
+# Full fallback chain — every model that supports generateContent
+MODEL_FALLBACK = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-001",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash-lite-001",
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest",
+    "gemini-flash-lite-latest",
+    "gemini-pro-latest",
+    "gemma-3-27b-it",
+    "gemma-3-12b-it",
+    "gemma-3-4b-it",
+]
+
+# Track which models are quota-exhausted this session
+_exhausted: set = set()
 
 
-def get_working_model():
-    for model_name in MODEL_FALLBACK:
+def _pick_model():
+    """Return (model, model_name) for the first non-exhausted model."""
+    for name in MODEL_FALLBACK:
+        if name in _exhausted:
+            continue
         try:
-            m = genai.GenerativeModel(model_name)
-            m.generate_content("test", request_options={"timeout": 8})
-            print(f"Using model: {model_name}")
-            return m
+            m = genai.GenerativeModel(name)
+            # lightweight probe
+            m.generate_content("hi", request_options={"timeout": 8})
+            print(f"[gemini] Using model: {name}")
+            return m, name
         except Exception as e:
-            if "429" not in str(e):
-                print(f"Using model (unverified): {model_name}")
-                return genai.GenerativeModel(model_name)
-            print(f"Model {model_name} quota exhausted, trying next...")
-    return genai.GenerativeModel(MODEL_FALLBACK[0])
+            err = str(e)
+            if "429" in err or "quota" in err.lower():
+                print(f"[gemini] {name} quota exhausted, trying next...")
+                _exhausted.add(name)
+            else:
+                # model exists but probe failed for another reason — still use it
+                print(f"[gemini] Using model (probe failed): {name}")
+                return genai.GenerativeModel(name), name
+    raise RuntimeError("All Gemini models are quota-exhausted. Try again tomorrow or add a new API key.")
 
 
-model = get_working_model()
+# Pick best available model at startup
+try:
+    _model, _model_name = _pick_model()
+except RuntimeError as e:
+    print(f"[gemini] WARNING: {e}")
+    _model = genai.GenerativeModel(MODEL_FALLBACK[0])
+    _model_name = MODEL_FALLBACK[0]
+
+
+def _get_model():
+    """Always return a working model, re-picking if current one got exhausted."""
+    global _model, _model_name
+    if _model_name in _exhausted:
+        try:
+            _model, _model_name = _pick_model()
+        except RuntimeError:
+            pass
+    return _model
 
 
 def _merge_links(articles, original_news):
-    """Match Gemini articles back to original news to attach link, source, date"""
+    """Attach link, source, published_date back from original scraped news."""
     link_map = {}
     for item in original_news:
         key = item.get("title", "").lower()[:60]
         link_map[key] = {
-            "link": item.get("link", ""),
-            "source": item.get("source", ""),
+            "link":           item.get("link", ""),
+            "source":         item.get("source", ""),
             "published_date": item.get("published_date", ""),
         }
 
@@ -42,7 +84,6 @@ def _merge_links(articles, original_news):
         ai_title = article.get("title", "").lower()[:60]
         meta = link_map.get(ai_title)
         if not meta:
-            # fuzzy match by common words
             best, best_score = {}, 0
             a_words = set(ai_title.split())
             for orig_key, orig_meta in link_map.items():
@@ -59,15 +100,14 @@ def _merge_links(articles, original_news):
     return articles
 
 
-def analyze(news, role, retries=2, backoff=15):
+def analyze(news, role):
     if not news:
         return _empty_response(role)
 
-    # Send title + source + description snippet to Gemini for richer analysis
     trimmed = [
         {
-            "title": n.get("title", ""),
-            "source": n.get("source", ""),
+            "title":       n.get("title", ""),
+            "source":      n.get("source", ""),
             "description": n.get("description", "")[:300],
         }
         for n in news
@@ -129,18 +169,21 @@ NEWS ARTICLES:
 {trimmed}
 """
 
-    for attempt in range(retries):
+    last_err = None
+    # Try each non-exhausted model
+    for model_name in MODEL_FALLBACK:
+        if model_name in _exhausted:
+            continue
         try:
-            response = model.generate_content(
+            m = genai.GenerativeModel(model_name)
+            response = m.generate_content(
                 prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.4,
                     max_output_tokens=8192,
                 )
             )
-
             text = response.text.strip()
-            # Strip markdown fences
             if "```" in text:
                 text = text.split("```json")[-1].split("```")[0].strip()
 
@@ -150,33 +193,28 @@ NEWS ARTICLES:
             if not all(k in result for k in required):
                 raise ValueError("Missing required keys in Gemini response")
 
-            # Merge original links back into articles
             result["top_articles"] = _merge_links(result.get("top_articles", []), news)
+            print(f"[gemini] Analysis complete using {model_name}")
             return result
-
-        except json.JSONDecodeError as e:
-            print(f"JSON parse error attempt {attempt+1}: {e}")
-            if attempt < retries - 1:
-                time.sleep(backoff)
-            else:
-                return _fallback_response(role, news)
 
         except Exception as e:
             err = str(e)
-            print(f"Gemini error attempt {attempt+1}: {err[:200]}")
-
-            if "429" in err and attempt < retries - 1:
-                wait = backoff * (attempt + 1)
-                print(f"Rate limited. Waiting {wait}s...")
-                time.sleep(wait)
+            if "429" in err or "quota" in err.lower():
+                print(f"[gemini] {model_name} quota exhausted during analysis, trying next...")
+                _exhausted.add(model_name)
+                last_err = err
+                continue
+            elif isinstance(e, json.JSONDecodeError):
+                print(f"[gemini] JSON parse error on {model_name}, trying next...")
+                last_err = err
+                continue
+            elif "403" in err or "api key" in err.lower():
+                raise Exception("Invalid API key. Set GEMINI_API_KEY environment variable.")
+            else:
+                last_err = err
                 continue
 
-            if "403" in err or "api key" in err.lower():
-                raise Exception("Invalid API key. Set GEMINI_API_KEY environment variable.")
-
-            if attempt == retries - 1:
-                return _fallback_response(role, news)
-
+    print(f"[gemini] All models exhausted. Using fallback response. Last error: {last_err}")
     return _fallback_response(role, news)
 
 
@@ -190,30 +228,29 @@ def _empty_response(role):
 
 
 def _fallback_response(role, news):
-    """Used only when Gemini completely fails — shows real article data"""
     return {
         "daily_brief": f"AI analysis temporarily unavailable. Showing {len(news)} raw articles for {role}.",
         "top_articles": [
             {
-                "title": item.get("title", ""),
-                "short_summary": f"Source: {item.get('source', 'Unknown')}",
-                "what_happened": "AI analysis failed. Click the link to read the full article.",
-                "why_it_matters": "Manual review required.",
+                "title":                 item.get("title", ""),
+                "short_summary":         f"Source: {item.get('source', 'Unknown')}",
+                "what_happened":         "AI analysis failed. Click the link to read the full article.",
+                "why_it_matters":        "Manual review required.",
                 "target_roles_impacted": [role],
-                "opportunity_level": "Medium",
-                "recommended_action": "Open the article link and assess relevance manually.",
-                "urgency_score": 5,
-                "link": item.get("link", ""),
-                "source": item.get("source", ""),
-                "published_date": item.get("published_date", ""),
+                "opportunity_level":     "Medium",
+                "recommended_action":    "Open the article link and assess relevance manually.",
+                "urgency_score":         5,
+                "link":                  item.get("link", ""),
+                "source":                item.get("source", ""),
+                "published_date":        item.get("published_date", ""),
             }
             for item in news[:6]
         ],
-        "top_trends": ["AI analysis temporarily unavailable — check back shortly"],
+        "top_trends":           ["AI analysis temporarily unavailable — check back shortly"],
         "growth_opportunities": [],
-        "threats": [],
+        "threats":              [],
         "missed_opportunities": [],
-        "strategic_moves": [],
-        "tools_to_watch": [],
-        "hiring_signals": []
+        "strategic_moves":      [],
+        "tools_to_watch":       [],
+        "hiring_signals":       []
     }
