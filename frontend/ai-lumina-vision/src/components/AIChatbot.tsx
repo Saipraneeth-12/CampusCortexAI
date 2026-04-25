@@ -266,15 +266,31 @@ export function InlineChatbot() {
               <p className="leading-relaxed whitespace-pre-wrap">{m.text}</p>
               <div className="mt-1 text-[10px] text-muted-foreground">{m.time}</div>
               {m.role === "assistant" && m.sources && m.sources.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
-                  <p className="text-[9px] font-semibold text-muted-foreground uppercase">Sources:</p>
-                  {m.sources.slice(0, 3).map((src, idx) => (
-                    <div key={idx} className="text-[9px] text-muted-foreground/80">
-                      <div className="font-medium">{src.source} • {src.date}</div>
-                      <div className="line-clamp-1">{src.title}</div>
+                <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">📰 Sources & References:</p>
+                  {m.sources.slice(0, 5).map((src, idx) => (
+                    <div key={idx} className="text-[9px] bg-white/5 rounded-lg p-2 space-y-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="font-semibold text-foreground/90 line-clamp-2">{src.title}</div>
+                          <div className="text-muted-foreground/80 mt-0.5">
+                            <span className="font-medium text-[oklch(0.85_0.18_200)]">{src.source}</span>
+                            <span className="mx-1">•</span>
+                            <span>{src.date}</span>
+                          </div>
+                        </div>
+                      </div>
+                      {src.summary && (
+                        <div className="text-muted-foreground/70 line-clamp-2 italic">{src.summary}</div>
+                      )}
                       {src.link && (
-                        <a href={src.link} target="_blank" rel="noopener noreferrer" className="text-[oklch(0.7_0.24_255)] hover:underline">
-                          Read more →
+                        <a 
+                          href={src.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[oklch(0.7_0.24_255)] hover:text-[oklch(0.7_0.24_255/0.8)] hover:underline transition-colors"
+                        >
+                          Read full article →
                         </a>
                       )}
                     </div>
@@ -446,15 +462,31 @@ export function AIChatbot() {
                     <p className="leading-relaxed whitespace-pre-wrap">{m.text}</p>
                     <div className="mt-1 text-[10px] text-muted-foreground">{m.time}</div>
                     {m.role === "assistant" && m.sources && m.sources.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
-                        <p className="text-[9px] font-semibold text-muted-foreground uppercase">Sources:</p>
-                        {m.sources.slice(0, 2).map((src, idx) => (
-                          <div key={idx} className="text-[9px] text-muted-foreground/80">
-                            <div className="font-medium">{src.source} • {src.date}</div>
-                            <div className="line-clamp-1">{src.title}</div>
+                      <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">📰 Sources & References:</p>
+                        {m.sources.slice(0, 4).map((src, idx) => (
+                          <div key={idx} className="text-[9px] bg-white/5 rounded-lg p-2 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="font-semibold text-foreground/90 line-clamp-2">{src.title}</div>
+                                <div className="text-muted-foreground/80 mt-0.5">
+                                  <span className="font-medium text-[oklch(0.85_0.18_200)]">{src.source}</span>
+                                  <span className="mx-1">•</span>
+                                  <span>{src.date}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {src.summary && (
+                              <div className="text-muted-foreground/70 line-clamp-2 italic">{src.summary}</div>
+                            )}
                             {src.link && (
-                              <a href={src.link} target="_blank" rel="noopener noreferrer" className="text-[oklch(0.7_0.24_255)] hover:underline">
-                                Read more →
+                              <a 
+                                href={src.link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[oklch(0.7_0.24_255)] hover:text-[oklch(0.7_0.24_255/0.8)] hover:underline transition-colors"
+                              >
+                                Read full article →
                               </a>
                             )}
                           </div>
