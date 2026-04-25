@@ -41,6 +41,7 @@ export interface ReportResponse {
   strategic_moves: string[];
   tools_to_watch: string[];
   hiring_signals: string[];
+  _cached_at?: string;  // e.g. "09:42, Apr 25"
 }
 
 export interface CompetitorAlert {
@@ -78,7 +79,8 @@ export interface Trend {
   confidence: number;
   color: string;
   desc: string;
-  forecast: number[];
+  weekly_activity: number[];  // 7 values: Mon–Sun
+  forecast: number[];         // alias for weekly_activity (backward compat)
 }
 
 export interface TrendsResponse {
@@ -122,5 +124,23 @@ export const api = {
     apiFetch<{ reply: string }>("/chat", {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+
+  sendEmail: (role: string, recipient: string) =>
+    apiFetch<{ status: string; recipient: string }>("/send-email", {
+      method: "POST",
+      body: JSON.stringify({ role, recipient }),
+    }),
+
+  setScheduledRole: (role: string, recipient: string) =>
+    apiFetch<{ status: string; role: string; email: string }>("/set-scheduled-role", {
+      method: "POST",
+      body: JSON.stringify({ role, recipient }),
+    }),
+
+  sendWhatsApp: (role: string, to: string) =>
+    apiFetch<{ status: string; sid: string; to: string }>("/send-whatsapp", {
+      method: "POST",
+      body: JSON.stringify({ role, to }),
     }),
 };

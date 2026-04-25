@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Radar as RadarIcon, ExternalLink, Clock, ChevronDown, ChevronUp, Zap, Flame, Shield, Target, ArrowRight, RefreshCw } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
-import { api, type CompetitorAlert, type CompetitorResponse } from "@/lib/api";
+import { useData } from "@/context/DataContext";
+import type { CompetitorAlert } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard/competitors")({
   head: () => ({ meta: [{ title: "Competitor Radar — Campus Cortex AI" }] }),
@@ -151,26 +152,9 @@ function SkeletonCard() {
 function Competitors() {
   const { role } = useRole();
   const meta = ROLE_META[role];
-  const [data, setData] = useState<CompetitorResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { competitors: data, loading, error, refreshCompetitors } = useData();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await api.getCompetitors(role);
-      setData(result);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [role]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  const fresh = data?.fresh ?? [];
+  const fresh    = data?.fresh    ?? [];
   const trending = data?.trending ?? [];
 
   return (
@@ -191,7 +175,7 @@ function Competitors() {
             <span>10 competitors monitored</span>
           </div>
           <button
-            onClick={fetchData}
+            onClick={refreshCompetitors}
             disabled={loading}
             className="glass flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs font-medium transition-colors hover:bg-white/10 disabled:opacity-50"
           >

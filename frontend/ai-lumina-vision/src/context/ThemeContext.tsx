@@ -14,6 +14,8 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
+    // Guard: localStorage is not available during SSR
+    if (typeof window === "undefined") return "dark";
     return (localStorage.getItem("theme") as Theme) ?? "dark";
   });
 

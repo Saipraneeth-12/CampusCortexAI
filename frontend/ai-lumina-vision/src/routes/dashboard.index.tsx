@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { useRole, ROLE_META } from "@/context/RoleContext";
-import { api, type ReportResponse, type CompetitorResponse } from "@/lib/api";
+import { useData } from "@/context/DataContext";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({ meta: [{ title: "Overview — Campus Cortex AI" }] }),
@@ -75,32 +75,12 @@ function computeConfidence(
 function Overview() {
   const { role } = useRole();
   const meta = ROLE_META[role];
-  const [report, setReport]           = useState<ReportResponse | null>(null);
-  const [competitors, setCompetitors] = useState<CompetitorResponse | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState<string | null>(null);
-  const [lastSync, setLastSync]       = useState<string>("");
+  const { report, competitors, loading, error, lastSync, refreshAll } = useData();
 
-  const fetchData = useCallback(async (bustCache = false) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (bustCache) await api.clearCache();
-      const [rep, comp] = await Promise.all([
-        api.getReport(role),
-        api.getCompetitors(role),
-      ]);
-      setReport(rep);
-      setCompetitors(comp);
-      setLastSync(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
+  // Fetch on first mount if no data yet
+  useEffect(() => {
+    if (!report && !loading) refreshAll();
   }, [role]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
 
   // ── Derived real-time values ───────────────────────────────────────────────
   const freshArticles    = report?.fresh?.top_articles    ?? [];
@@ -267,7 +247,7 @@ function Overview() {
             <span className="font-medium">{lastSync || "—"}</span>
           </div>
           <button
-            onClick={() => fetchData(true)}
+            onClick={() => refreshAll(true)}
             disabled={loading}
             className="glass flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs font-medium transition-colors hover:bg-white/10 disabled:opacity-50"
           >

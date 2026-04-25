@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Download, Zap, Flame, ExternalLink, Clock, AlertTriangle,
   TrendingUp, Lightbulb, ChevronDown, ChevronUp, RefreshCw,
 } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
-import { api, type ReportResponse, type TopArticle } from "@/lib/api";
+import { useData } from "@/context/DataContext";
+import { api, type TopArticle } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard/reports")({
   head: () => ({ meta: [{ title: "Morning Pulse — Campus Cortex AI" }] }),
@@ -110,26 +111,8 @@ function SkeletonCard() {
 function Reports() {
   const { role } = useRole();
   const meta = ROLE_META[role];
-  const [report, setReport] = useState<ReportResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { report, loading, error, refreshReport } = useData();
   const [pdfLoading, setPdfLoading] = useState(false);
-
-  const fetchReport = async (bustCache = false) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (bustCache) await api.clearCache();
-      const data = await api.getReport(role);
-      setReport(data);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchReport(); }, [role]);
 
   const handleDownload = async () => {
     setPdfLoading(true);
@@ -150,7 +133,7 @@ function Reports() {
     }
   };
 
-  const fresh = report?.fresh?.top_articles ?? [];
+  const fresh    = report?.fresh?.top_articles    ?? [];
   const trending = report?.trending?.top_articles ?? [];
 
   return (
@@ -163,11 +146,14 @@ function Reports() {
           <h1 className="font-display text-3xl font-bold md:text-4xl">Morning Pulse Report</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Powered by Google Gemini · 3 live sources
+            {report?._cached_at && (
+              <span className="ml-2 text-muted-foreground/60">· cached {report._cached_at}</span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => fetchReport(true)}
+            onClick={() => refreshReport(true)}
             disabled={loading}
             className="glass flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2.5 text-sm font-medium transition-colors hover:bg-white/10 disabled:opacity-50"
           >

@@ -1,20 +1,13 @@
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
+import { useState } from "react";
 import {
-  LayoutDashboard,
-  Radar,
-  TrendingUp,
-  Sparkles,
-  Settings,
-  Bell,
-  Cpu,
-  Newspaper,
-  Bot,
-  Sun,
-  Moon,
+  LayoutDashboard, Radar, TrendingUp, Sparkles, Settings,
+  Bell, Cpu, Newspaper, Bot, Sun, Moon, Mail, Send, X, MessageCircle,
 } from "lucide-react";
 import { RoleSelector } from "./RoleSelector";
 import { useRole, ROLE_META } from "@/context/RoleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { api } from "@/lib/api";
 
 const navItems = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -31,6 +24,60 @@ export function DashboardLayout() {
   const { role } = useRole();
   const meta = ROLE_META[role];
   const { theme, toggleTheme } = useTheme();
+
+  // Send Mail state
+  const [showMailPanel, setShowMailPanel] = useState(false);
+  const [mailInput, setMailInput]         = useState("");
+  const [mailStatus, setMailStatus]       = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [mailError, setMailError]         = useState("");
+
+  // WhatsApp state
+  const [showWAPanel, setShowWAPanel]   = useState(false);
+  const [waInput, setWaInput]           = useState("+919391065691");
+  const [waStatus, setWaStatus]         = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [waError, setWaError]           = useState("");
+
+  const handleSendMail = async () => {
+    if (!mailInput.trim() || !mailInput.includes("@")) {
+      setMailError("Please enter a valid email address.");
+      return;
+    }
+    setMailStatus("sending");
+    setMailError("");
+    try {
+      await api.sendEmail(role, mailInput.trim());
+      await api.setScheduledRole(role, mailInput.trim());
+      setMailStatus("sent");
+      setTimeout(() => {
+        setMailStatus("idle");
+        setShowMailPanel(false);
+        setMailInput("");
+      }, 3000);
+    } catch (e) {
+      setMailStatus("error");
+      setMailError((e as Error).message || "Failed to send email.");
+    }
+  };
+
+  const handleSendWhatsApp = async () => {
+    if (!waInput.trim()) {
+      setWaError("Please enter a valid WhatsApp number.");
+      return;
+    }
+    setWaStatus("sending");
+    setWaError("");
+    try {
+      await api.sendWhatsApp(role, waInput.trim());
+      setWaStatus("sent");
+      setTimeout(() => {
+        setWaStatus("idle");
+        setShowWAPanel(false);
+      }, 3000);
+    } catch (e) {
+      setWaStatus("error");
+      setWaError((e as Error).message || "Failed to send WhatsApp message.");
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -96,6 +143,144 @@ export function DashboardLayout() {
               <span className="text-xs font-medium">AI Engine Online</span>
             </div>
             <p className="mt-1 text-[10px] text-muted-foreground">3 sources · Gemini 12-model chain</p>
+          </div>
+
+          {/* ── Send Mail Panel ── */}
+          <div className="mt-3">
+            {!showMailPanel ? (
+              <button
+                onClick={() => setShowMailPanel(true)}
+                className="w-full flex items-center gap-2 rounded-xl border border-border/60 bg-white/5 px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+              >
+                <Mail className="h-4 w-4 text-[oklch(0.7_0.24_255)]" />
+                Send Report via Email
+              </button>
+            ) : (
+              <div className="glass rounded-xl border border-[oklch(0.7_0.24_255/0.3)] p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[oklch(0.85_0.18_200)] flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5" /> Send Report
+                  </span>
+                  <button
+                    onClick={() => { setShowMailPanel(false); setMailStatus("idle"); setMailError(""); }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                <input
+                  type="email"
+                  value={mailInput}
+                  onChange={e => setMailInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleSendMail()}
+                  placeholder="Enter email address"
+                  disabled={mailStatus === "sending" || mailStatus === "sent"}
+                  className="w-full rounded-lg border border-border/60 bg-white/5 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[oklch(0.7_0.24_255/0.6)] disabled:opacity-50"
+                />
+
+                {mailError && (
+                  <p className="text-[10px] text-[oklch(0.72_0.27_340)]">{mailError}</p>
+                )}
+
+                {mailStatus === "sent" ? (
+                  <div className="flex items-center gap-1.5 text-xs text-[oklch(0.78_0.2_155)] font-medium">
+                    <span>✓</span> Report sent successfully!
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleSendMail}
+                    disabled={mailStatus === "sending" || !mailInput.trim()}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    {mailStatus === "sending" ? (
+                      <>
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Sending…
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5" />
+                        Send Report
+                      </>
+                    )}
+                  </button>
+                )}
+
+                <p className="text-[9px] text-muted-foreground/60 text-center">
+                  Sends {role} report + PDF · Also sets 3:31 AM schedule
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ── WhatsApp Panel ── */}
+          <div className="mt-2">
+            {!showWAPanel ? (
+              <button
+                onClick={() => setShowWAPanel(true)}
+                className="w-full flex items-center gap-2 rounded-xl border border-border/60 bg-white/5 px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+              >
+                <MessageCircle className="h-4 w-4 text-[oklch(0.78_0.2_155)]" />
+                Send via WhatsApp
+              </button>
+            ) : (
+              <div className="glass rounded-xl border border-[oklch(0.78_0.2_155/0.3)] p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[oklch(0.78_0.2_155)] flex items-center gap-1.5">
+                    <MessageCircle className="h-3.5 w-3.5" /> WhatsApp Report
+                  </span>
+                  <button
+                    onClick={() => { setShowWAPanel(false); setWaStatus("idle"); setWaError(""); }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                <input
+                  type="tel"
+                  value={waInput}
+                  onChange={e => setWaInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleSendWhatsApp()}
+                  placeholder="+91XXXXXXXXXX"
+                  disabled={waStatus === "sending" || waStatus === "sent"}
+                  className="w-full rounded-lg border border-border/60 bg-white/5 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[oklch(0.78_0.2_155/0.6)] disabled:opacity-50"
+                />
+
+                {waError && (
+                  <p className="text-[10px] text-[oklch(0.72_0.27_340)]">{waError}</p>
+                )}
+
+                {waStatus === "sent" ? (
+                  <div className="flex items-center gap-1.5 text-xs text-[oklch(0.78_0.2_155)] font-medium">
+                    <span>✓</span> WhatsApp message sent!
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleSendWhatsApp}
+                    disabled={waStatus === "sending" || !waInput.trim()}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[oklch(0.78_0.2_155)] to-[oklch(0.7_0.24_255)] px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    {waStatus === "sending" ? (
+                      <>
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Sending…
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        Send to WhatsApp
+                      </>
+                    )}
+                  </button>
+                )}
+
+                <p className="text-[9px] text-muted-foreground/60 text-center">
+                  Sends {role} report summary via Twilio
+                </p>
+              </div>
+            )}
           </div>
         </aside>
 
