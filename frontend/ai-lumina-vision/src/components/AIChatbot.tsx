@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, Sparkles, Volume2, VolumeX, Mic, MicOff, RotateCcw } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
+import { useChatHistory } from "@/context/ChatHistoryContext";
 import { api } from "@/lib/api";
 
 interface Message {
@@ -88,8 +89,8 @@ function stopSpeaking() {
 export function InlineChatbot() {
   const { role } = useRole();
   const meta = ROLE_META[role];
+  const { messages, addMessage } = useChatHistory();
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
   const [typing, setTyping] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [listening, setListening] = useState(false);
@@ -118,7 +119,6 @@ export function InlineChatbot() {
 
   // Reset on role change
   useEffect(() => {
-    setMessages([]);
     stopSpeaking();
   }, [role]);
 
@@ -127,12 +127,11 @@ export function InlineChatbot() {
     stopSpeaking();
     setInput("");
     const userMsg: Message = { id: Date.now().toString(), role: "user", text, time: now() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    addMessage(userMsg);
     setTyping(true);
 
     try {
-      const history = newMessages.slice(-6).map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
+      const history = messages.slice(-6).map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
       const res = await api.chat({ role, message: text, history, competitors: {} });
       const reply: Message = { 
         id: (Date.now() + 1).toString(), 
@@ -141,7 +140,7 @@ export function InlineChatbot() {
         time: now(),
         sources: res.sources || []
       };
-      setMessages(m => [...m, reply]);
+      addMessage(reply);
       if (autoSpeak) speak(res.reply);
     } catch (e) {
       const errText = (e as Error).message.includes("fetch")
@@ -152,7 +151,7 @@ export function InlineChatbot() {
         text: errText,
         time: now(),
       };
-      setMessages(m => [...m, errMsg]);
+      addMessage(errMsg);
     } finally {
       setTyping(false);
     }

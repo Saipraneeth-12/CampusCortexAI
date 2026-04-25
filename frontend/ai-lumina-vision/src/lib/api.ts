@@ -101,6 +101,20 @@ export interface ChatResponse {
   timestamp: string;
 }
 
+export interface ActionPlanTask {
+  day: string;
+  title: string;
+  description: string;
+  urgency: "High" | "Medium" | "Low";
+  eta: string;
+  tags: string[];
+  color: string;
+}
+
+export interface ActionPlanResponse {
+  tasks: ActionPlanTask[];
+}
+
 // ── Fetch helpers ─────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -157,4 +171,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ role, to }),
     }),
+
+  getActionPlan: (role: string) =>
+    apiFetch<ActionPlanResponse>(`/action-plan?role=${encodeURIComponent(role)}`),
 };

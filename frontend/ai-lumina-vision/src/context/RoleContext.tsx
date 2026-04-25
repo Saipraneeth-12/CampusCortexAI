@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 export type Role =
   | "Institute Owner"
@@ -59,11 +59,17 @@ const RoleContext = createContext<RoleContextValue>({
 });
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>(() => {
-    if (typeof window === "undefined") return "Institute Owner";
+  const [role, setRole] = useState<Role>("Institute Owner");
+  const [mounted, setMounted] = useState(false);
+
+  // After hydration, sync with localStorage
+  useEffect(() => {
     const saved = localStorage.getItem("campus-cortex-role");
-    return (saved as Role) || "Institute Owner";
-  });
+    if (saved && ROLES.includes(saved as Role)) {
+      setRole(saved as Role);
+    }
+    setMounted(true);
+  }, []);
 
   const handleSetRole = (r: Role) => {
     setRole(r);

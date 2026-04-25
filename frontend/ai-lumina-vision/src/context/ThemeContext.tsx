@@ -13,12 +13,18 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Guard: localStorage is not available during SSR
-    if (typeof window === "undefined") return "dark";
-    return (localStorage.getItem("theme") as Theme) ?? "dark";
-  });
+  // Always initialize with "dark" to match server render
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
 
+  // After hydration, sync with localStorage
+  useEffect(() => {
+    setMounted(true);
+    const stored = (localStorage.getItem("theme") as Theme) ?? "dark";
+    setTheme(stored);
+  }, []);
+
+  // Update DOM and localStorage when theme changes
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "light") {
