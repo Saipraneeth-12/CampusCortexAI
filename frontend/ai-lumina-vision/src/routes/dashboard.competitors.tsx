@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Radar as RadarIcon, ExternalLink, Clock, ChevronDown, ChevronUp, Zap, Flame, Shield, Target, ArrowRight, RefreshCw } from "lucide-react";
+import { Radar as RadarIcon, ExternalLink, Clock, ChevronDown, ChevronUp, Zap, Flame, Shield, Target, ArrowRight, RefreshCw, Sparkles, AlertCircle } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
 import { useData } from "@/context/DataContext";
 import { api, type CompetitorAlert, type CompetitorSummary } from "@/lib/api";
@@ -292,6 +292,44 @@ function Competitors() {
           </div>
         </div>
       </div>
+
+      {/* Recommended Actions */}
+      <section>
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-xl bg-[oklch(0.85_0.18_200/0.15)] px-3 py-2">
+            <AlertCircle className="h-4 w-4 text-[oklch(0.85_0.18_200)]" />
+            <span className="font-display text-base font-semibold">Recommended Actions</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Counter-strategies based on competitor moves</p>
+        </div>
+        <div className="space-y-3">
+          {summary?.recommended_actions && summary.recommended_actions.length > 0 ? (
+            summary.recommended_actions.map((action, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="glass neon-border relative overflow-hidden rounded-2xl p-5"
+              >
+                <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full opacity-30 blur-3xl bg-[oklch(0.85_0.18_200)]" />
+                <div className="relative flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[oklch(0.85_0.18_200/0.2)] text-[oklch(0.85_0.18_200)]">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm leading-relaxed text-foreground/90">{action}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">
+              {summaryLoading ? "Loading recommended actions…" : "No specific actions recommended at this time."}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Fresh */}
       <section>

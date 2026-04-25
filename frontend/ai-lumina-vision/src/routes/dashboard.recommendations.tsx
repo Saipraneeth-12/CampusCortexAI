@@ -112,9 +112,12 @@ function Recs() {
             ))}
           </div>
         ) : planError ? (
-          <div className="text-sm text-muted-foreground">Failed to load action plan. Using default recommendations.</div>
-        ) : actionPlan.length > 0 ? (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="text-sm text-muted-foreground mb-4">Failed to load action plan. Showing default recommendations.</div>
+        ) : null}
+        
+        {/* Show action plan summary cards if available */}
+        {actionPlan.length > 0 && (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 mb-6">
             {actionPlan.slice(0, 6).map((task, i) => (
               <div key={i} className="flex items-start gap-3 rounded-xl bg-white/5 p-3">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold text-white" style={{ background: task.color }}>
@@ -129,54 +132,55 @@ function Recs() {
               </div>
             ))}
           </div>
-        ) : null}
-      </div>
+        )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {(actionPlan.length > 0 ? actionPlan : recs).map((item: any, i: number) => {
-          const r = actionPlan.length > 0 ? item : item;
-          const isRealData = actionPlan.length > 0;
-          
-          return (
-            <motion.div
-              key={isRealData ? item.title : item.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-              className="glass tilt-card neon-border relative overflow-hidden rounded-2xl p-6"
-            >
-              <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-40 blur-3xl" style={{ background: r.color }} />
-              <div className="flex items-start justify-between">
-                <span
-                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-                  style={{ background: `${r.color.replace(")", " / 0.15)")}`, color: r.color, borderColor: `${r.color.replace(")", " / 0.4)")}` }}
-                >
-                  <Sparkles className="h-3 w-3" /> {r.urgency} urgency
-                </span>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" /> {r.eta}
+        {/* Show full recommendation cards */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          {(actionPlan.length > 0 ? actionPlan : recs).map((item: any, i: number) => {
+            const r = actionPlan.length > 0 ? item : item;
+            const isRealData = actionPlan.length > 0;
+            
+            return (
+              <motion.div
+                key={isRealData ? item.title : item.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="glass tilt-card neon-border relative overflow-hidden rounded-2xl p-6"
+              >
+                <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-40 blur-3xl" style={{ background: r.color }} />
+                <div className="flex items-start justify-between">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                    style={{ background: `${r.color.replace(")", " / 0.15)")}`, color: r.color, borderColor: `${r.color.replace(")", " / 0.4)")}` }}
+                  >
+                    <Sparkles className="h-3 w-3" /> {r.urgency} urgency
+                  </span>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" /> {r.eta}
+                  </div>
                 </div>
-              </div>
-              <h3 className="mt-3 font-display text-lg font-semibold leading-tight">{r.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{r.description || r.desc}</p>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap gap-2">
-                  {r.tags.map((t: string) => (
-                    <span key={t} className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-semibold">
-                      {t}
-                    </span>
-                  ))}
+                <h3 className="mt-3 font-display text-lg font-semibold leading-tight">{r.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{r.description || r.desc}</p>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    {r.tags.map((t: string) => (
+                      <span key={t} className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-semibold">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => window.open(`/dashboard/chatbot?prompt=${encodeURIComponent(`Help me implement: ${r.title}`)}`, '_self')}
+                    className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[oklch(0.85_0.18_200)] hover:text-[oklch(0.7_0.24_255)]"
+                  >
+                    Apply now <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                  </button>
                 </div>
-                <button 
-                  onClick={() => window.open(`/dashboard/chatbot?prompt=${encodeURIComponent(`Help me implement: ${r.title}`)}`, '_self')}
-                  className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[oklch(0.85_0.18_200)] hover:text-[oklch(0.7_0.24_255)]"
-                >
-                  Apply now <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
 
       {/* AI Advisor — grounded in live report data */}
