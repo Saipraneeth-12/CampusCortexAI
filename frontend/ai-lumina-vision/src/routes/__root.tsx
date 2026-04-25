@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { RoleProvider } from "@/context/RoleContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { ChatHistoryProvider } from "@/context/ChatHistoryContext";
 
 import appCss from "../styles.css?url";
 
@@ -73,7 +74,9 @@ function RootComponent() {
   return (
     <ThemeProvider>
       <RoleProvider>
-        <Outlet />
+        <ChatHistoryProvider>
+          <Outlet />
+        </ChatHistoryProvider>
       </RoleProvider>
     </ThemeProvider>
   );

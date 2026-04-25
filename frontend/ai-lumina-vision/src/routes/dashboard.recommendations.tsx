@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Clock, Calendar } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
-import { useData } from "@/context/DataContext";
 import { api, type ActionPlanTask } from "@/lib/api";
 import { InlineChatbot } from "@/components/AIChatbot";
 import { useState, useEffect } from "react";
@@ -67,7 +66,6 @@ const ROLE_RECS: Record<string, Rec[]> = {
 
 function Recs() {
   const { role } = useRole();
-  const { loading } = useData();
   const meta = ROLE_META[role];
   const [actionPlan, setActionPlan] = useState<ActionPlanTask[]>([]);
   const [planLoading, setPlanLoading] = useState(true);
@@ -160,7 +158,7 @@ function Recs() {
                 </div>
               </div>
               <h3 className="mt-3 font-display text-lg font-semibold leading-tight">{r.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{r.description}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{r.description || r.desc}</p>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap gap-2">
                   {r.tags.map((t: string) => (

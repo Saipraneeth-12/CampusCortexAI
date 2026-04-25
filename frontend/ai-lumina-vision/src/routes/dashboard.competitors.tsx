@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Radar as RadarIcon, ExternalLink, Clock, ChevronDown, ChevronUp, Zap, Flame, Shield, Target, ArrowRight, RefreshCw } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
 import { useData } from "@/context/DataContext";
-import type { CompetitorAlert } from "@/lib/api";
+import { api, type CompetitorAlert, type CompetitorSummary } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard/competitors")({
   head: () => ({ meta: [{ title: "Competitor Radar — Campus Cortex AI" }] }),
@@ -153,6 +153,27 @@ function Competitors() {
   const { role } = useRole();
   const meta = ROLE_META[role];
   const { competitors: data, loading, error, refreshCompetitors } = useData();
+  const [summary, setSummary] = useState<CompetitorSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      setSummaryLoading(true);
+      setSummaryError(null);
+      try {
+        const result = await api.getCompetitorSummary(role);
+        setSummary(result);
+      } catch (e) {
+        setSummaryError((e as Error).message);
+        setSummary(null);
+      } finally {
+        setSummaryLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, [role]);
 
   const fresh    = data?.fresh    ?? [];
   const trending = data?.trending ?? [];
@@ -197,13 +218,13 @@ function Competitors() {
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="flex-1 max-w-2xl">
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">Competitive Intelligence Summary</p>
-            {loading ? (
+            {summaryLoading ? (
               <div className="space-y-2">
                 <div className="h-4 w-3/4 rounded bg-white/10 animate-pulse" />
                 <div className="h-4 w-2/3 rounded bg-white/10 animate-pulse" />
                 <div className="h-4 w-5/6 rounded bg-white/10 animate-pulse" />
               </div>
-            ) : (
+            ) : summaryError ? (
               <div className="space-y-2.5">
                 {(() => {
                   const allMoves = [...fresh, ...trending];
@@ -240,7 +261,21 @@ function Competitors() {
                   ));
                 })()}
               </div>
-            )}
+            ) : summary ? (
+              <div className="space-y-3">
+                <p className="text-sm leading-relaxed text-foreground/90">{summary.summary}</p>
+                {summary.key_insights?.length > 0 && (
+                  <div className="space-y-1.5">
+                    {summary.key_insights.map((insight, i) => (
+                      <div key={i} className="flex items-start gap-2.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[oklch(0.72_0.27_340)]" />
+                        <p className="text-sm leading-relaxed text-foreground/90">{insight}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[

@@ -115,6 +115,12 @@ export interface ActionPlanResponse {
   tasks: ActionPlanTask[];
 }
 
+export interface CompetitorSummary {
+  summary: string;
+  key_insights: string[];
+  recommended_actions: string[];
+}
+
 // ── Fetch helpers ─────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -174,4 +180,7 @@ export const api = {
 
   getActionPlan: (role: string) =>
     apiFetch<ActionPlanResponse>(`/action-plan?role=${encodeURIComponent(role)}`),
+
+  getCompetitorSummary: (role: string) =>
+    apiFetch<CompetitorSummary>(`/competitor-summary?role=${encodeURIComponent(role)}`),
 };
