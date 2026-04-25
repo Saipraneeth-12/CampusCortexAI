@@ -1,2 +1,10 @@
 
 node_modules
+ffmpeg/
+__pycache__/
+*.pyc
+*.mp4
+*.m4a
+generated_videos/
+served_pdfs/
+.env

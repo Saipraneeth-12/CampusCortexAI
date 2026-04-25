@@ -1,19 +1,8 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
-export type Role =
-  | "Institute Owner"
-  | "Backend Developer"
-  | "Data Engineer"
-  | "Founder / Entrepreneur"
-  | "Product Builder";
+export type Role = "Institute Owner";
 
-export const ROLES: Role[] = [
-  "Institute Owner",
-  "Backend Developer",
-  "Data Engineer",
-  "Founder / Entrepreneur",
-  "Product Builder",
-];
+export const ROLES: Role[] = ["Institute Owner"];
 
 export const ROLE_META: Record<Role, { icon: string; color: string; focus: string; initials: string }> = {
   "Institute Owner": {
@@ -21,30 +10,6 @@ export const ROLE_META: Record<Role, { icon: string; color: string; focus: strin
     color: "oklch(0.7 0.24 255)",
     focus: "LMS adoption, student enrollment tech, competitor institutes, school management software",
     initials: "IO",
-  },
-  "Backend Developer": {
-    icon: "⚙️",
-    color: "oklch(0.85 0.18 200)",
-    focus: "Framework trends, API tools, cloud infrastructure, stack demand signals",
-    initials: "BD",
-  },
-  "Data Engineer": {
-    icon: "📊",
-    color: "oklch(0.78 0.2 155)",
-    focus: "Pipeline tools, ETL trends, real-time analytics, AI data infrastructure",
-    initials: "DE",
-  },
-  "Founder / Entrepreneur": {
-    icon: "🚀",
-    color: "oklch(0.82 0.17 75)",
-    focus: "Startup funding, market gaps, competitor acquisitions, SaaS growth signals",
-    initials: "FE",
-  },
-  "Product Builder": {
-    icon: "🛠️",
-    color: "oklch(0.65 0.28 300)",
-    focus: "Product launches, UX trends, no-code tools, competitor feature releases",
-    initials: "PB",
   },
 };
 
@@ -59,27 +24,8 @@ const RoleContext = createContext<RoleContextValue>({
 });
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>("Institute Owner");
-  const [mounted, setMounted] = useState(false);
-
-  // After hydration, sync with localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("campus-cortex-role");
-    if (saved && ROLES.includes(saved as Role)) {
-      setRole(saved as Role);
-    }
-    setMounted(true);
-  }, []);
-
-  const handleSetRole = (r: Role) => {
-    setRole(r);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("campus-cortex-role", r);
-    }
-  };
-
   return (
-    <RoleContext.Provider value={{ role, setRole: handleSetRole }}>
+    <RoleContext.Provider value={{ role: "Institute Owner", setRole: () => {} }}>
       {children}
     </RoleContext.Provider>
   );

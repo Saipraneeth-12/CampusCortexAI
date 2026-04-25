@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Clock, Calendar } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
-import { api, type ActionPlanTask } from "@/lib/api";
+import { useData } from "@/context/DataContext";
 import { InlineChatbot } from "@/components/AIChatbot";
 import { useState, useEffect } from "react";
 
@@ -67,27 +67,20 @@ const ROLE_RECS: Record<string, Rec[]> = {
 function Recs() {
   const { role } = useRole();
   const meta = ROLE_META[role];
-  const [actionPlan, setActionPlan] = useState<ActionPlanTask[]>([]);
-  const [planLoading, setPlanLoading] = useState(true);
-  const [planError, setPlanError] = useState<string | null>(null);
+  const { actionPlan: planData, loading: globalLoading, ensureActionPlan } = useData();
+  const [planLoading, setPlanLoading] = useState(false);
 
+  const actionPlan = planData?.tasks ?? [];
+
+  // Fetch action plan lazily — only if not already cached
   useEffect(() => {
-    const fetchActionPlan = async () => {
+    if (!planData && !globalLoading) {
       setPlanLoading(true);
-      setPlanError(null);
-      try {
-        const result = await api.getActionPlan(role);
-        setActionPlan(result.tasks || []);
-      } catch (e) {
-        setPlanError((e as Error).message);
-        setActionPlan([]);
-      } finally {
-        setPlanLoading(false);
-      }
-    };
-
-    fetchActionPlan();
+      ensureActionPlan().finally(() => setPlanLoading(false));
+    }
   }, [role]);
+
+  const isLoading = planLoading || (globalLoading && !planData);
 
   // Fallback to hardcoded recs if action plan fails
   const recs = ROLE_RECS[role] ?? ROLE_RECS["Institute Owner"];
@@ -105,14 +98,12 @@ function Recs() {
       {/* 7-day action plan */}
       <div className="glass neon-border rounded-2xl p-5">
         <h3 className="font-display text-lg font-semibold mb-4">7-Day Action Plan</h3>
-        {planLoading ? (
+        {isLoading ? (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-24 rounded-xl bg-white/5 animate-pulse" />
             ))}
           </div>
-        ) : planError ? (
-          <div className="text-sm text-muted-foreground mb-4">Failed to load action plan. Showing default recommendations.</div>
         ) : null}
         
         {/* Show action plan summary cards if available */}

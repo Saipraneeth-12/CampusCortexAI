@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Radar as RadarIcon, ExternalLink, Clock, ChevronDown, ChevronUp, Zap, Flame, Shield, Target, ArrowRight, RefreshCw, Sparkles, AlertCircle } from "lucide-react";
 import { useRole, ROLE_META } from "@/context/RoleContext";
 import { useData } from "@/context/DataContext";
-import { api, type CompetitorAlert, type CompetitorSummary } from "@/lib/api";
+import type { CompetitorAlert } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard/competitors")({
   head: () => ({ meta: [{ title: "Competitor Radar — Campus Cortex AI" }] }),
@@ -30,14 +30,30 @@ const COMP_COLORS: Record<string, string> = {
   "PhysicsWallah": "oklch(0.82 0.17 75)",
 };
 
+// Logo sources — using Clearbit (free, no auth) + Google favicon as fallback
+const COMP_LOGOS: Record<string, string> = {
+  "Byju's":          "https://logo.clearbit.com/byjus.com",
+  "Unacademy":       "https://logo.clearbit.com/unacademy.com",
+  "Coursera":        "https://logo.clearbit.com/coursera.org",
+  "upGrad":          "https://logo.clearbit.com/upgrad.com",
+  "Google Classroom":"https://logo.clearbit.com/classroom.google.com",
+  "Khan Academy":    "https://logo.clearbit.com/khanacademy.org",
+  "Duolingo":        "https://logo.clearbit.com/duolingo.com",
+  "Chegg":           "https://logo.clearbit.com/chegg.com",
+  "Vedantu":         "https://logo.clearbit.com/vedantu.com",
+  "PhysicsWallah":   "https://logo.clearbit.com/pw.live",
+};
+
 function getColor(name: string) {
   return COMP_COLORS[name] ?? "oklch(0.7 0.24 255)";
 }
 
 function CompetitorCard({ alert, index }: { alert: CompetitorAlert; index: number }) {
   const [expanded, setExpanded] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const color = getColor(alert.competitor);
   const urgColor = alert.urgency >= 8 ? "oklch(0.72 0.27 340)" : alert.urgency >= 5 ? "oklch(0.82 0.17 75)" : "oklch(0.78 0.2 155)";
+  const logoUrl = COMP_LOGOS[alert.competitor];
 
   return (
     <motion.div
@@ -50,8 +66,21 @@ function CompetitorCard({ alert, index }: { alert: CompetitorAlert; index: numbe
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white" style={{ background: color, boxShadow: `0 0 18px ${color}` }}>
-            {alert.competitor.slice(0, 2)}
+          {/* Company logo with fallback to colored initials */}
+          <div
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl overflow-hidden text-sm font-bold text-white"
+            style={{ background: logoError || !logoUrl ? color : "white", boxShadow: `0 0 18px ${color}` }}
+          >
+            {logoUrl && !logoError ? (
+              <img
+                src={logoUrl}
+                alt={alert.competitor}
+                className="h-8 w-8 object-contain"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              alert.competitor.slice(0, 2)
+            )}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -152,29 +181,28 @@ function SkeletonCard() {
 function Competitors() {
   const { role } = useRole();
   const meta = ROLE_META[role];
-  const { competitors: data, loading, error, refreshCompetitors } = useData();
-  const [summary, setSummary] = useState<CompetitorSummary | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(true);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const {
+    competitors: data,
+    competitorSummary: summary,
+    loading,
+    competitorsLoading,
+    error,
+    refreshCompetitors,
+    ensureCompetitorSummary,
+  } = useData();
 
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  // Fetch competitors lazily if not cached, fetch summary lazily too
   useEffect(() => {
-    const fetchSummary = async () => {
+    // Fetch competitor summary lazily
+    if (!summary) {
       setSummaryLoading(true);
-      setSummaryError(null);
-      try {
-        const result = await api.getCompetitorSummary(role);
-        setSummary(result);
-      } catch (e) {
-        setSummaryError((e as Error).message);
-        setSummary(null);
-      } finally {
-        setSummaryLoading(false);
-      }
-    };
+      ensureCompetitorSummary().finally(() => setSummaryLoading(false));
+    }
+  }, [role, data]);
 
-    fetchSummary();
-  }, [role]);
-
+  const isLoading = loading || competitorsLoading;
   const fresh    = data?.fresh    ?? [];
   const trending = data?.trending ?? [];
 
@@ -187,7 +215,7 @@ function Competitors() {
           </p>
           <h1 className="font-display text-3xl font-bold md:text-4xl">Competitor Radar</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {loading ? "Scanning 10 competitors…" : `${data?.total ?? 0} competitor moves detected · AI-generated counter-strategies`}
+            {isLoading ? "Scanning 10 competitors…" : `${data?.total ?? 0} competitor moves detected · AI-generated counter-strategies`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -196,11 +224,11 @@ function Competitors() {
             <span>10 competitors monitored</span>
           </div>
           <button
-            onClick={refreshCompetitors}
-            disabled={loading}
+            onClick={() => refreshCompetitors(true)}
+            disabled={isLoading}
             className="glass flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs font-medium transition-colors hover:bg-white/10 disabled:opacity-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </button>
         </div>
@@ -224,7 +252,7 @@ function Competitors() {
                 <div className="h-4 w-2/3 rounded bg-white/10 animate-pulse" />
                 <div className="h-4 w-5/6 rounded bg-white/10 animate-pulse" />
               </div>
-            ) : summaryError ? (
+            ) : !summary ? (
               <div className="space-y-2.5">
                 {(() => {
                   const allMoves = [...fresh, ...trending];
@@ -280,9 +308,9 @@ function Competitors() {
           <div className="grid grid-cols-2 gap-3">
             {[
               { l: "Competitors", v: "10" },
-              { l: "Fresh Moves", v: loading ? "—" : `${fresh.length}` },
-              { l: "Trending", v: loading ? "—" : `${trending.length}` },
-              { l: "Total Alerts", v: loading ? "—" : `${data?.total ?? 0}` },
+              { l: "Fresh Moves", v: isLoading ? "—" : `${fresh.length}` },
+              { l: "Trending", v: isLoading ? "—" : `${trending.length}` },
+              { l: "Total Alerts", v: isLoading ? "—" : `${data?.total ?? 0}` },
             ].map((s) => (
               <div key={s.l} className="glass min-w-[90px] rounded-xl p-3 text-center">
                 <div className="font-display text-xl font-bold gradient-text-pink">{s.v}</div>
@@ -338,13 +366,13 @@ function Competitors() {
             <Zap className="h-4 w-4 text-[oklch(0.85_0.18_200)]" />
             <span className="font-display text-base font-semibold">Last 48 Hours</span>
             <span className="rounded-full bg-[oklch(0.7_0.24_255/0.3)] px-2 py-0.5 text-[10px] font-bold text-[oklch(0.85_0.18_200)]">
-              {loading ? "…" : fresh.length}
+              {isLoading ? "…" : fresh.length}
             </span>
           </div>
           <p className="text-xs text-muted-foreground">Fresh competitor moves</p>
         </div>
         <div className="space-y-4">
-          {loading ? [1, 2].map(i => <SkeletonCard key={i} />) :
+          {isLoading ? [1, 2].map(i => <SkeletonCard key={i} />) :
             fresh.length > 0 ? fresh.map((a, i) => <CompetitorCard key={i} alert={a} index={i} />) :
             <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">No fresh competitor moves in the last 48 hours.</div>
           }
@@ -358,13 +386,13 @@ function Competitors() {
             <Flame className="h-4 w-4 text-[oklch(0.72_0.27_340)]" />
             <span className="font-display text-base font-semibold">Still Trending</span>
             <span className="rounded-full bg-[oklch(0.72_0.27_340/0.3)] px-2 py-0.5 text-[10px] font-bold text-[oklch(0.72_0.27_340)]">
-              {loading ? "…" : trending.length}
+              {isLoading ? "…" : trending.length}
             </span>
           </div>
           <p className="text-xs text-muted-foreground">Older moves still shaping the market</p>
         </div>
         <div className="space-y-4">
-          {loading ? [1, 2].map(i => <SkeletonCard key={i} />) :
+          {isLoading ? [1, 2].map(i => <SkeletonCard key={i} />) :
             trending.length > 0 ? trending.map((a, i) => <CompetitorCard key={i} alert={a} index={i} />) :
             <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">No trending competitor moves found.</div>
           }

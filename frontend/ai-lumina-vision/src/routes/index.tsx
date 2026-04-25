@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, PlayCircle, Sparkles, Cpu, TrendingUp, Radar, Newspaper, Zap, Brain, MessageSquare } from "lucide-react";
+import { ArrowRight, Sparkles, TrendingUp, Radar, Newspaper, Zap, Brain, MessageSquare } from "lucide-react";
 import { HeroGlobe } from "@/components/HeroGlobe";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
@@ -33,16 +33,6 @@ function Landing() {
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-10"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="glass mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-[oklch(0.85_0.18_200)]" />
-              <span>Powered by Google Gemini · 12-model fallback chain</span>
-            </motion.div>
-
             <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl">
               Your Daily
               <br />
@@ -72,10 +62,6 @@ function Landing() {
                 Open Dashboard
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
-              <button className="glass inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-white/10">
-                <PlayCircle className="h-4 w-4 text-[oklch(0.85_0.18_200)]" />
-                Watch Demo
-              </button>
             </div>
 
             <div className="mt-12 grid max-w-lg grid-cols-3 gap-6">
@@ -190,7 +176,10 @@ function Landing() {
       <footer className="border-t border-border/40 px-4 py-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Cpu className="h-4 w-4 text-[oklch(0.85_0.18_200)]" />
+            <svg viewBox="0 0 32 32" fill="none" className="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 8C7.8 8 6 9.8 6 12c0 1.2.5 2.3 1.3 3C6.5 15.7 6 16.8 6 18c0 2.2 1.8 4 4 4h1v1.5a1.5 1.5 0 003 0V22h4v1.5a1.5 1.5 0 003 0V22h1c2.2 0 4-1.8 4-4 0-1.2-.5-2.3-1.3-3 .8-.7 1.3-1.8 1.3-3 0-2.2-1.8-4-4-4-.4 0-.8.1-1.2.2C20.1 6.9 18.2 6 16 6s-4.1.9-4.8 2.2C10.8 8.1 10.4 8 10 8z" fill="oklch(0.85 0.18 200)" fillOpacity="0.8"/>
+              <path d="M8 16h3l1.5-3 2 6 1.5-4.5 1 2.5 1-1.5H24" stroke="oklch(0.85 0.18 200)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             <span>© 2026 Campus Cortex AI — Morning Pulse Market Intelligence Engine.</span>
           </div>
           <div className="flex gap-5">
@@ -208,18 +197,28 @@ function Navbar() {
   return (
     <header className="glass fixed left-1/2 top-4 z-50 flex h-14 w-[min(92%,1100px)] -translate-x-1/2 items-center justify-between rounded-2xl border border-border/60 px-4 md:px-6">
       <Link to="/" className="flex items-center gap-2.5">
-        <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] shadow-[0_0_18px_oklch(0.7_0.24_265/0.6)]">
-          <Cpu className="h-4 w-4 text-white" strokeWidth={2.5} />
+        {/* Realistic Campus Cortex AI logo — brain with pulse signal */}
+        <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] shadow-[0_0_20px_oklch(0.7_0.24_265/0.6)]">
+          <svg viewBox="0 0 32 32" fill="none" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+            {/* Brain outline */}
+            <path d="M10 8C7.8 8 6 9.8 6 12c0 1.2.5 2.3 1.3 3C6.5 15.7 6 16.8 6 18c0 2.2 1.8 4 4 4h1v1.5a1.5 1.5 0 003 0V22h4v1.5a1.5 1.5 0 003 0V22h1c2.2 0 4-1.8 4-4 0-1.2-.5-2.3-1.3-3 .8-.7 1.3-1.8 1.3-3 0-2.2-1.8-4-4-4-.4 0-.8.1-1.2.2C20.1 6.9 18.2 6 16 6s-4.1.9-4.8 2.2C10.8 8.1 10.4 8 10 8z" fill="white" fillOpacity="0.9"/>
+            {/* Pulse line through brain */}
+            <path d="M8 16h3l1.5-3 2 6 1.5-4.5 1 2.5 1-1.5H24" stroke="oklch(0.85 0.18 200)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
         <div className="font-display text-sm font-bold leading-none">
           Campus Cortex <span className="text-muted-foreground">AI</span>
         </div>
       </Link>
-      <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-        <a className="transition-colors hover:text-foreground" href="#features">Features</a>
-        <a className="transition-colors hover:text-foreground" href="#features">Roles</a>
-        <a className="transition-colors hover:text-foreground" href="#features">API</a>
-      </nav>
+
+      {/* No nav links — clean minimal navbar */}
+      <div className="hidden items-center gap-2 text-xs text-muted-foreground md:flex">
+        <span className="flex items-center gap-1.5 rounded-full bg-[oklch(0.78_0.2_155/0.15)] px-2.5 py-1 text-[oklch(0.78_0.2_155)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.2_155)] animate-pulse" />
+          Live Intelligence
+        </span>
+      </div>
+
       <Link
         to="/dashboard"
         className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] px-3.5 py-2 text-xs font-semibold text-white shadow-[0_0_18px_oklch(0.7_0.24_265/0.5)] transition-transform hover:scale-[1.03]"

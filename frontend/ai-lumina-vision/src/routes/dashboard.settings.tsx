@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Settings as SettingsIcon, Bell, Cpu, Globe, Shield, Mail, RefreshCw, Check } from "lucide-react";
-import { useRole, ROLES, ROLE_META } from "@/context/RoleContext";
+import { useState, useEffect } from "react";
+import { Settings as SettingsIcon, Bell, Cpu, Globe, Shield, Mail, RefreshCw, Check, Clock, Loader } from "lucide-react";
+import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard/settings")({
   head: () => ({ meta: [{ title: "Settings — Campus Cortex AI" }] }),
@@ -20,11 +20,45 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 }
 
 function Settings() {
-  const { role, setRole } = useRole();
   const [saved, setSaved] = useState(false);
   const [notifications, setNotifications] = useState({ email: true, fresh: true, trending: true, competitor: true });
   const [sources, setSources] = useState({ googleNews: true, guardian: true, newsdata: true });
+
+  // Email schedule state
   const [emailTime, setEmailTime] = useState("07:00");
+  const [emailRecipient, setEmailRecipient] = useState("rithwik140705@gmail.com");
+  const [scheduleStatus, setScheduleStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [scheduleMsg, setScheduleMsg] = useState("");
+
+  // Load current schedule from backend on mount
+  useEffect(() => {
+    fetch("http://localhost:8000/health")
+      .then(r => r.json())
+      .catch(() => null);
+    // Try to read current config
+    fetch("http://localhost:8000/get-email-schedule")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.send_time) setEmailTime(data.send_time);
+        if (data?.email) setEmailRecipient(data.email);
+      })
+      .catch(() => null);
+  }, []);
+
+  const handleSaveSchedule = async () => {
+    setScheduleStatus("saving");
+    setScheduleMsg("");
+    try {
+      const result = await api.setEmailSchedule(emailTime, emailRecipient);
+      setScheduleStatus("saved");
+      setScheduleMsg(result.message || `Schedule saved! Email will be sent at ${emailTime} IST.`);
+      setTimeout(() => setScheduleStatus("idle"), 4000);
+    } catch (e) {
+      setScheduleStatus("error");
+      setScheduleMsg((e as Error).message || "Failed to save schedule.");
+      setTimeout(() => setScheduleStatus("idle"), 4000);
+    }
+  };
 
   const handleSave = () => {
     setSaved(true);
@@ -41,40 +75,27 @@ function Settings() {
       </header>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Role Selection */}
+
+        {/* Active Role — read-only display */}
         <div className="glass tilt-card neon-border rounded-2xl p-6 md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.7_0.24_255/0.25)] to-[oklch(0.65_0.28_300/0.25)] text-[oklch(0.85_0.18_200)]">
               <Cpu className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-display text-lg font-semibold">Your Role</h3>
-              <p className="text-xs text-muted-foreground">Controls all intelligence, news queries, and AI analysis across the platform.</p>
+              <h3 className="font-display text-lg font-semibold">Active Role</h3>
+              <p className="text-xs text-muted-foreground">All intelligence, news queries, and AI analysis are tailored for this role.</p>
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {ROLES.map((r) => {
-              const m = ROLE_META[r];
-              const active = r === role;
-              return (
-                <button
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={`relative flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all ${active ? "border-[oklch(0.7_0.24_255/0.6)] bg-[oklch(0.7_0.24_255/0.1)]" : "border-border/50 bg-white/5 hover:bg-white/10"}`}
-                >
-                  {active && (
-                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[oklch(0.7_0.24_255)]">
-                      <Check className="h-3 w-3 text-white" />
-                    </span>
-                  )}
-                  <span className="text-2xl">{m.icon}</span>
-                  <div>
-                    <div className="text-sm font-semibold" style={{ color: active ? m.color : undefined }}>{r}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{m.focus.split(",")[0]}</div>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-4 rounded-xl border border-[oklch(0.7_0.24_255/0.6)] bg-[oklch(0.7_0.24_255/0.08)] px-5 py-4">
+            <span className="text-3xl">🏫</span>
+            <div>
+              <div className="text-base font-semibold text-[oklch(0.7_0.24_255)]">Institute Owner</div>
+              <div className="text-xs text-muted-foreground mt-0.5">LMS adoption, student enrollment tech, competitor institutes, school management software</div>
+            </div>
+            <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-[oklch(0.7_0.24_255)]">
+              <Check className="h-3.5 w-3.5 text-white" />
+            </span>
           </div>
         </div>
 
@@ -113,7 +134,7 @@ function Settings() {
           </div>
           <div className="space-y-4">
             {[
-              { key: "email" as const, label: "Daily Email Report", desc: "Full HTML report with all 5 role PDFs" },
+              { key: "email" as const, label: "Daily Email Report", desc: "Full HTML report with role-specific PDF" },
               { key: "fresh" as const, label: "Fresh Article Alerts", desc: "Breaking news in the last 48 hours" },
               { key: "trending" as const, label: "Trending Story Alerts", desc: "High-impact stories from 2–14 days" },
               { key: "competitor" as const, label: "Competitor Move Alerts", desc: "Immediate alerts on competitor activity" },
@@ -137,20 +158,67 @@ function Settings() {
             </div>
             <h3 className="font-display text-lg font-semibold">Email Schedule</h3>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">Daily intelligence report sent via Gmail SMTP with role-specific PDF attachments.</p>
-          <div className="space-y-3">
+          <p className="text-sm text-muted-foreground mb-4">
+            Daily intelligence report sent via Gmail SMTP. Set the time and it will auto-send every day.
+          </p>
+          <div className="space-y-4">
+            {/* Time picker */}
             <div>
-              <label className="text-xs uppercase tracking-wider text-muted-foreground">Send Time (IST)</label>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                <Clock className="h-3 w-3" /> Send Time (IST)
+              </label>
               <input
                 type="time"
                 value={emailTime}
-                onChange={(e) => setEmailTime(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-sm focus:border-[oklch(0.7_0.24_255/0.6)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.7_0.24_255/0.2)]"
+                onChange={(e) => { setEmailTime(e.target.value); setScheduleStatus("idle"); }}
+                className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2.5 text-sm focus:border-[oklch(0.7_0.24_255/0.6)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.7_0.24_255/0.2)]"
               />
             </div>
+
+            {/* Recipient */}
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                Recipient Email
+              </label>
+              <input
+                type="email"
+                value={emailRecipient}
+                onChange={(e) => { setEmailRecipient(e.target.value); setScheduleStatus("idle"); }}
+                placeholder="your@email.com"
+                className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2.5 text-sm focus:border-[oklch(0.7_0.24_255/0.6)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.7_0.24_255/0.2)]"
+              />
+            </div>
+
+            {/* Sender info */}
             <div className="rounded-xl bg-white/5 p-3 text-xs text-muted-foreground">
               Sender: <span className="text-foreground">saipraneethkukunoor45@gmail.com</span>
             </div>
+
+            {/* Status message */}
+            {scheduleMsg && (
+              <div className={`rounded-xl px-3 py-2.5 text-xs font-medium ${
+                scheduleStatus === "saved"
+                  ? "bg-[oklch(0.78_0.2_155/0.15)] text-[oklch(0.78_0.2_155)] border border-[oklch(0.78_0.2_155/0.3)]"
+                  : "bg-[oklch(0.72_0.27_340/0.15)] text-[oklch(0.72_0.27_340)] border border-[oklch(0.72_0.27_340/0.3)]"
+              }`}>
+                {scheduleStatus === "saved" ? "✅ " : "⚠ "}{scheduleMsg}
+              </div>
+            )}
+
+            {/* Save button */}
+            <button
+              onClick={handleSaveSchedule}
+              disabled={scheduleStatus === "saving"}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_16px_oklch(0.7_0.24_265/0.4)] transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {scheduleStatus === "saving" ? (
+                <><Loader className="h-4 w-4 animate-spin" /> Saving & Sending Confirmation…</>
+              ) : scheduleStatus === "saved" ? (
+                <><Check className="h-4 w-4" /> Schedule Saved!</>
+              ) : (
+                <><Clock className="h-4 w-4" /> Save Schedule & Send Confirmation</>
+              )}
+            </button>
           </div>
         </div>
 
@@ -164,7 +232,7 @@ function Settings() {
           </div>
           <p className="text-sm text-muted-foreground mb-4">Google Gemini with 12-model fallback chain. Auto-switches on quota limits.</p>
           <div className="space-y-2">
-            {["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro", "gemini-pro-vision"].map((m, i) => (
+            {["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-flash-lite-latest"].map((m, i) => (
               <div key={m} className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
                 <span className="text-xs font-mono">{m}</span>
                 <span className={`text-[10px] font-semibold ${i === 0 ? "text-[oklch(0.78_0.2_155)]" : "text-muted-foreground"}`}>
@@ -175,7 +243,7 @@ function Settings() {
           </div>
         </div>
 
-        {/* Security */}
+        {/* API Keys */}
         <div className="glass tilt-card neon-border rounded-2xl p-6 md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.7_0.24_255/0.25)] to-[oklch(0.65_0.28_300/0.25)] text-[oklch(0.85_0.18_200)]">

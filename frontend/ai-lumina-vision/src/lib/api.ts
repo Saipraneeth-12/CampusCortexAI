@@ -172,6 +172,12 @@ export const api = {
       body: JSON.stringify({ role, recipient }),
     }),
 
+  setEmailSchedule: (send_time: string, recipient: string) =>
+    apiFetch<{ status: string; send_time: string; recipient: string; message: string }>("/set-email-schedule", {
+      method: "POST",
+      body: JSON.stringify({ send_time, recipient }),
+    }),
+
   sendWhatsApp: (role: string, to: string) =>
     apiFetch<{ status: string; sid: string; to: string }>("/send-whatsapp", {
       method: "POST",
@@ -183,4 +189,7 @@ export const api = {
 
   getCompetitorSummary: (role: string) =>
     apiFetch<CompetitorSummary>(`/competitor-summary?role=${encodeURIComponent(role)}`),
+
+  generateVideo: (role: string) =>
+    apiFetch<{ success: boolean; video_url: string; video_filename: string; script: string; generated_at: string; error?: string }>(`/generate-video?role=${encodeURIComponent(role)}`),
 };

@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -10,6 +9,7 @@ import {
   ArrowUpRight, ArrowDownRight, Zap, Activity, Brain, Clock, RefreshCw,
 } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { VideoBriefing } from "@/components/VideoBriefing";
 import { useRole, ROLE_META } from "@/context/RoleContext";
 import { useData } from "@/context/DataContext";
 
@@ -75,12 +75,9 @@ function computeConfidence(
 function Overview() {
   const { role } = useRole();
   const meta = ROLE_META[role];
-  const { report, competitors, loading, error, lastSync, refreshAll } = useData();
+  const { report, competitors, loading, error, lastSync, refreshReport } = useData();
 
-  // Fetch on first mount if no data yet
-  useEffect(() => {
-    if (!report && !loading) refreshAll();
-  }, [role]);
+  // No manual fetch here — DataContext handles initial load from cache/network
 
   // ── Derived real-time values ───────────────────────────────────────────────
   const freshArticles    = report?.fresh?.top_articles    ?? [];
@@ -247,7 +244,7 @@ function Overview() {
             <span className="font-medium">{lastSync || "—"}</span>
           </div>
           <button
-            onClick={() => refreshAll(true)}
+            onClick={() => refreshReport(true)}
             disabled={loading}
             className="glass flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs font-medium transition-colors hover:bg-white/10 disabled:opacity-50"
           >
@@ -268,6 +265,9 @@ function Overview() {
           ⚠ {error} — Make sure the backend is running on port 8000.
         </div>
       )}
+
+      {/* ── AI Video Briefing ── */}
+      <VideoBriefing />
 
       {/* ── KPI Grid ── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   LayoutDashboard, Radar, TrendingUp, Sparkles, Settings,
-  Bell, Cpu, Newspaper, Bot, Sun, Moon, Mail, Send, X, MessageCircle,
+  Bell, Newspaper, Bot, Sun, Moon, Mail, Send, X, MessageCircle,
 } from "lucide-react";
 import { RoleSelector } from "./RoleSelector";
 import { useRole, ROLE_META } from "@/context/RoleContext";
@@ -88,7 +88,10 @@ export function DashboardLayout() {
         <aside className="glass-strong sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border/50 p-4 lg:flex">
           <Link to="/" className="mb-8 flex items-center gap-2.5 px-2">
             <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[oklch(0.7_0.24_255)] to-[oklch(0.65_0.28_300)] shadow-[0_0_24px_oklch(0.7_0.24_265/0.6)]">
-              <Cpu className="h-5 w-5 text-white" strokeWidth={2.4} />
+              <svg viewBox="0 0 32 32" fill="none" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 8C7.8 8 6 9.8 6 12c0 1.2.5 2.3 1.3 3C6.5 15.7 6 16.8 6 18c0 2.2 1.8 4 4 4h1v1.5a1.5 1.5 0 003 0V22h4v1.5a1.5 1.5 0 003 0V22h1c2.2 0 4-1.8 4-4 0-1.2-.5-2.3-1.3-3 .8-.7 1.3-1.8 1.3-3 0-2.2-1.8-4-4-4-.4 0-.8.1-1.2.2C20.1 6.9 18.2 6 16 6s-4.1.9-4.8 2.2C10.8 8.1 10.4 8 10 8z" fill="white" fillOpacity="0.9"/>
+                <path d="M8 16h3l1.5-3 2 6 1.5-4.5 1 2.5 1-1.5H24" stroke="oklch(0.85 0.18 200)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
             <div className="flex flex-col">
               <span className="font-display text-sm font-bold leading-tight">Campus Cortex</span>
@@ -289,7 +292,10 @@ export function DashboardLayout() {
           {/* Topbar */}
           <header className="glass sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border/50 px-4 md:px-6">
             <Link to="/" className="flex items-center gap-2 lg:hidden">
-              <Cpu className="h-5 w-5 text-[oklch(0.85_0.18_200)]" />
+              <svg viewBox="0 0 32 32" fill="none" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 8C7.8 8 6 9.8 6 12c0 1.2.5 2.3 1.3 3C6.5 15.7 6 16.8 6 18c0 2.2 1.8 4 4 4h1v1.5a1.5 1.5 0 003 0V22h4v1.5a1.5 1.5 0 003 0V22h1c2.2 0 4-1.8 4-4 0-1.2-.5-2.3-1.3-3 .8-.7 1.3-1.8 1.3-3 0-2.2-1.8-4-4-4-.4 0-.8.1-1.2.2C20.1 6.9 18.2 6 16 6s-4.1.9-4.8 2.2C10.8 8.1 10.4 8 10 8z" fill="oklch(0.85 0.18 200)" fillOpacity="0.9"/>
+                <path d="M8 16h3l1.5-3 2 6 1.5-4.5 1 2.5 1-1.5H24" stroke="oklch(0.85 0.18 200)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <span className="font-display text-sm font-bold">Campus Cortex</span>
             </Link>
 

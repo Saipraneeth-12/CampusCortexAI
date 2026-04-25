@@ -1,0 +1,29 @@
+# FFmpeg source (cloned separately, not part of this repo)
+ffmpeg/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.env
+venv/
+.venv/
+
+# Node
+node_modules/
+dist/
+.cache/
+
+# Generated files
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/generated_videos/
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/served_pdfs/
+
+# OS
+.DS_Store
+Thumbs.db
