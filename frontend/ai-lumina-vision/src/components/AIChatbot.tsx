@@ -9,6 +9,13 @@ interface Message {
   role: "user" | "assistant";
   text: string;
   time: string;
+  sources?: Array<{
+    title: string;
+    source: string;
+    date: string;
+    link: string;
+    summary: string;
+  }>;
 }
 
 const ROLE_SUGGESTIONS: Record<string, string[]> = {
@@ -127,7 +134,13 @@ export function InlineChatbot() {
     try {
       const history = newMessages.slice(-6).map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
       const res = await api.chat({ role, message: text, history, competitors: {} });
-      const reply: Message = { id: (Date.now() + 1).toString(), role: "assistant", text: res.reply, time: now() };
+      const reply: Message = { 
+        id: (Date.now() + 1).toString(), 
+        role: "assistant", 
+        text: res.reply, 
+        time: now(),
+        sources: res.sources || []
+      };
       setMessages(m => [...m, reply]);
       if (autoSpeak) speak(res.reply);
     } catch (e) {
@@ -252,6 +265,22 @@ export function InlineChatbot() {
             <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm ${m.role === "assistant" ? "bg-white/5 text-foreground/90" : "bg-gradient-to-br from-[oklch(0.7_0.24_255/0.3)] to-[oklch(0.65_0.28_300/0.3)] text-foreground"}`}>
               <p className="leading-relaxed whitespace-pre-wrap">{m.text}</p>
               <div className="mt-1 text-[10px] text-muted-foreground">{m.time}</div>
+              {m.role === "assistant" && m.sources && m.sources.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                  <p className="text-[9px] font-semibold text-muted-foreground uppercase">Sources:</p>
+                  {m.sources.slice(0, 3).map((src, idx) => (
+                    <div key={idx} className="text-[9px] text-muted-foreground/80">
+                      <div className="font-medium">{src.source} • {src.date}</div>
+                      <div className="line-clamp-1">{src.title}</div>
+                      {src.link && (
+                        <a href={src.link} target="_blank" rel="noopener noreferrer" className="text-[oklch(0.7_0.24_255)] hover:underline">
+                          Read more →
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -343,7 +372,13 @@ export function AIChatbot() {
     try {
       const history = newMessages.slice(-6).map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
       const res = await api.chat({ role, message: text, history, competitors: {} });
-      setMessages(m => [...m, { id: (Date.now() + 1).toString(), role: "assistant", text: res.reply, time: now() }]);
+      setMessages(m => [...m, { 
+        id: (Date.now() + 1).toString(), 
+        role: "assistant", 
+        text: res.reply, 
+        time: now(),
+        sources: res.sources || []
+      }]);
     } catch (e) {
       const errText = (e as Error).message.includes("fetch")
         ? "Backend not running. Start with: uvicorn api:app --reload (port 8000)"
@@ -410,6 +445,22 @@ export function AIChatbot() {
                   <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm ${m.role === "assistant" ? "bg-white/5" : "bg-gradient-to-br from-[oklch(0.7_0.24_255/0.3)] to-[oklch(0.65_0.28_300/0.3)]"}`}>
                     <p className="leading-relaxed whitespace-pre-wrap">{m.text}</p>
                     <div className="mt-1 text-[10px] text-muted-foreground">{m.time}</div>
+                    {m.role === "assistant" && m.sources && m.sources.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                        <p className="text-[9px] font-semibold text-muted-foreground uppercase">Sources:</p>
+                        {m.sources.slice(0, 2).map((src, idx) => (
+                          <div key={idx} className="text-[9px] text-muted-foreground/80">
+                            <div className="font-medium">{src.source} • {src.date}</div>
+                            <div className="line-clamp-1">{src.title}</div>
+                            {src.link && (
+                              <a href={src.link} target="_blank" rel="noopener noreferrer" className="text-[oklch(0.7_0.24_255)] hover:underline">
+                                Read more →
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

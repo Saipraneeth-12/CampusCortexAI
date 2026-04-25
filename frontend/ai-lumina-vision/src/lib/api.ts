@@ -87,6 +87,20 @@ export interface TrendsResponse {
   trends: Trend[];
 }
 
+export interface ChatSource {
+  title: string;
+  source: string;
+  date: string;
+  link: string;
+  summary: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+  sources: ChatSource[];
+  timestamp: string;
+}
+
 // ── Fetch helpers ─────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -121,7 +135,7 @@ export const api = {
     apiFetch<{ status: string; cached_roles: string[] }>("/health"),
 
   chat: (body: ChatMessage) =>
-    apiFetch<{ reply: string }>("/chat", {
+    apiFetch<ChatResponse>("/chat", {
       method: "POST",
       body: JSON.stringify(body),
     }),
