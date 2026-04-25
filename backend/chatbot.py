@@ -1,11 +1,11 @@
 """
 chatbot.py — Morning Pulse AI
 Context-aware chatbot that answers questions about the live report.
-Shares the model fallback chain with gemini_processor.
+Uses Groq AI for intelligent responses.
 """
 import os
 import google.generativeai as genai
-from gemini_processor import _try_all_models   # shared quota tracking
+from groq_processor import _try_all_models   # shared quota tracking
 
 API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyATBCBbduInSpu3-OiMagrfWeQLxkocKpg")
 genai.configure(api_key=API_KEY)

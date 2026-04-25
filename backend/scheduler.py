@@ -10,7 +10,7 @@ from datetime import datetime
 from scraper import scrape_news
 from cleaner import clean_articles
 from ranker import rank_news
-from gemini_processor import analyze
+from groq_processor import analyze
 from pdf_report import build_pdf
 from mailer import send_report_email
 

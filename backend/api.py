@@ -10,7 +10,7 @@ from typing import List
 from scraper import scrape_news
 from cleaner import clean_articles
 from ranker import rank_news
-from gemini_processor import analyze
+from groq_processor import analyze
 from pdf_report import build_pdf
 from competitor_tracker import get_competitor_alerts
 from chatbot import chat as chatbot_chat

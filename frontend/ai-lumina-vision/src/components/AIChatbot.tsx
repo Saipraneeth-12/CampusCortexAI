@@ -21,30 +21,40 @@ interface Message {
 
 const ROLE_SUGGESTIONS: Record<string, string[]> = {
   "Institute Owner": [
+    "What's the current state of AI curriculum in education?",
+    "Give me the current AI adoption landscape for institutes",
     "What's the biggest threat to me today?",
     "Which competitor should I worry about most?",
     "Give me a 7-day action plan",
     "What opportunities should I act on now?",
   ],
   "Backend Developer": [
+    "What's the current state of AI/ML curriculum for developers?",
+    "Give me the current landscape of AI engineering education",
     "What backend frameworks are trending?",
     "Any new cloud infrastructure news?",
     "What's the biggest tech shift this week?",
     "Give me a 7-day action plan",
   ],
   "Data Engineer": [
+    "What's the current state of data engineering curriculum?",
+    "Give me the current AI/ML pipeline education landscape",
     "What ETL tools are trending?",
     "Any news on real-time analytics platforms?",
     "What's happening in AI data infrastructure?",
     "Give me a 7-day action plan",
   ],
   "Founder / Entrepreneur": [
+    "What's the current state of AI business education?",
+    "Give me the current AI startup curriculum landscape",
     "What startups got funded this week?",
     "Any major EdTech acquisitions?",
     "What's the biggest market gap right now?",
     "Give me a 7-day action plan",
   ],
   "Product Builder": [
+    "What's the current state of AI product management curriculum?",
+    "Give me the current AI UX/design education landscape",
     "What product launches happened today?",
     "Any new no-code tools worth watching?",
     "What UX trends are emerging?",

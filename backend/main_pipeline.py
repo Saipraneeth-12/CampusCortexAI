@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../scrape")))
 
 from main_scraper import get_all_data
-from gemini_processor import analyze
+from groq_processor import analyze
 
 
 def run_pipeline(role="Institute Owner"):
