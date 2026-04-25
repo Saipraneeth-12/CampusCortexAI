@@ -118,13 +118,65 @@ export function DataProvider({ children, role }: { children: React.ReactNode; ro
         api.getReport(r),
         api.getTrends(r),
       ]);
-      writeCache(r, "report", rep);
+      
+      // Validate response structures and sanitize arrays
+      if (!rep || typeof rep !== 'object' || !('fresh' in rep)) {
+        throw new Error("Invalid report response format");
+      }
+      if (!trnd || typeof trnd !== 'object' || !('trends' in trnd)) {
+        throw new Error("Invalid trends response format");
+      }
+      
+      // Ensure all array fields contain strings
+      const sanitizedRep = {
+        ...rep,
+        top_trends: Array.isArray(rep.top_trends) ? rep.top_trends.map(t => {
+          if (typeof t === 'string') return t;
+          if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+          if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+          return String(t);
+        }) : [],
+        growth_opportunities: Array.isArray(rep.growth_opportunities) ? rep.growth_opportunities.map(t => {
+          if (typeof t === 'string') return t;
+          if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+          if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+          return String(t);
+        }) : [],
+        threats: Array.isArray(rep.threats) ? rep.threats.map(t => {
+          if (typeof t === 'string') return t;
+          if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+          if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+          return String(t);
+        }) : [],
+        strategic_moves: Array.isArray(rep.strategic_moves) ? rep.strategic_moves.map(t => {
+          if (typeof t === 'string') return t;
+          if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+          if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+          if (typeof t === 'object' && t !== null && 'move' in t) return (t as any).move;
+          if (typeof t === 'object' && t !== null && 'description' in t) return (t as any).description;
+          return String(t);
+        }) : [],
+        tools_to_watch: Array.isArray(rep.tools_to_watch) ? rep.tools_to_watch.map(t => {
+          if (typeof t === 'string') return t;
+          if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+          if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+          return String(t);
+        }) : [],
+        hiring_signals: Array.isArray(rep.hiring_signals) ? rep.hiring_signals.map(t => {
+          if (typeof t === 'string') return t;
+          if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+          if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+          return String(t);
+        }) : [],
+      };
+      
+      writeCache(r, "report", sanitizedRep);
       writeCache(r, "trends", trnd);
       // Invalidate derived caches so they re-generate from new data
       sessionStorage.removeItem(cacheKey(r, "actionPlan"));
       setState(s => ({
         ...s,
-        report: rep, trends: trnd,
+        report: sanitizedRep, trends: trnd,
         actionPlan: null,   // force re-fetch on next visit
         loading: false, error: null, lastSync: now(),
       }));
@@ -144,6 +196,12 @@ export function DataProvider({ children, role }: { children: React.ReactNode; ro
     setState(s => ({ ...s, competitorsLoading: true, error: null }));
     try {
       const comp = await api.getCompetitors(r);
+      
+      // Validate response structure
+      if (!comp || typeof comp !== 'object' || !('fresh' in comp) || !('trending' in comp)) {
+        throw new Error("Invalid competitors response format");
+      }
+      
       writeCache(r, "competitors", comp);
       sessionStorage.removeItem(cacheKey(r, "competitorSummary")); // invalidate summary
       setState(s => ({
@@ -163,19 +221,26 @@ export function DataProvider({ children, role }: { children: React.ReactNode; ro
     // Already have it — skip
     if (readCache<ActionPlanResponse>(r, "actionPlan")) {
       const cached = readCache<ActionPlanResponse>(r, "actionPlan");
-      if (cached) {
+      if (cached && cached.tasks && Array.isArray(cached.tasks)) {
         setState(s => ({ ...s, actionPlan: cached }));
         return;
       }
     }
-    if (state.actionPlan) return;
+    if (state.actionPlan && state.actionPlan.tasks && Array.isArray(state.actionPlan.tasks)) return;
 
     try {
       const plan = await api.getActionPlan(r);
-      writeCache(r, "actionPlan", plan);
-      setState(s => ({ ...s, actionPlan: plan }));
+      // Validate response structure
+      if (plan && typeof plan === 'object' && 'tasks' in plan && Array.isArray(plan.tasks)) {
+        writeCache(r, "actionPlan", plan);
+        setState(s => ({ ...s, actionPlan: plan }));
+      } else {
+        // Invalid response format, set to empty
+        setState(s => ({ ...s, actionPlan: { tasks: [] } }));
+      }
     } catch {
       // silently fail — page will show fallback
+      setState(s => ({ ...s, actionPlan: { tasks: [] } }));
     }
   }, [state.actionPlan]);
 
@@ -207,34 +272,95 @@ export function DataProvider({ children, role }: { children: React.ReactNode; ro
     const cachedPlan       = readCache<ActionPlanResponse>(r, "actionPlan");
     const cachedSummary    = readCache<CompetitorSummary>(r, "competitorSummary");
 
+    // Validate cached data structures
+    const validReport = cachedReport && typeof cachedReport === 'object' && 'fresh' in cachedReport ? cachedReport : null;
+    const validTrends = cachedTrends && typeof cachedTrends === 'object' && 'trends' in cachedTrends ? cachedTrends : null;
+    const validComp = cachedComp && typeof cachedComp === 'object' && 'fresh' in cachedComp ? cachedComp : null;
+    const validPlan = cachedPlan && typeof cachedPlan === 'object' && 'tasks' in cachedPlan && Array.isArray(cachedPlan.tasks) ? cachedPlan : null;
+    const validSummary = cachedSummary && typeof cachedSummary === 'object' && 'summary' in cachedSummary ? cachedSummary : null;
+
     // Restore from cache immediately
     setState({
-      report:            cachedReport,
-      competitors:       cachedComp,
-      trends:            cachedTrends,
-      actionPlan:        cachedPlan,
-      competitorSummary: cachedSummary,
-      loading:           !cachedReport,   // show loading only if no cache
+      report:            validReport,
+      competitors:       validComp,
+      trends:            validTrends,
+      actionPlan:        validPlan,
+      competitorSummary: validSummary,
+      loading:           !validReport,   // show loading only if no cache
       competitorsLoading: false,
       error:             null,
-      lastSync:          cachedReport ? "cached" : "",
+      lastSync:          validReport ? "cached" : "",
     });
 
     // Only fetch from network if cache is empty
-    if (!cachedReport) {
+    if (!validReport) {
       (async () => {
         try {
-          const [rep, trnd] = await Promise.all([
+          const [rep, trnd, comp] = await Promise.all([
             api.getReport(r),
             api.getTrends(r),
+            api.getCompetitors(r),
           ]);
-          writeCache(r, "report", rep);
-          writeCache(r, "trends", trnd);
-          setState(s => ({
-            ...s,
-            report: rep, trends: trnd,
-            loading: false, error: null, lastSync: now(),
-          }));
+          
+          // Validate responses
+          if (rep && typeof rep === 'object' && 'fresh' in rep &&
+              trnd && typeof trnd === 'object' && 'trends' in trnd &&
+              comp && typeof comp === 'object' && 'fresh' in comp) {
+            
+            // Sanitize report data
+            const sanitizedRep = {
+              ...rep,
+              top_trends: Array.isArray(rep.top_trends) ? rep.top_trends.map(t => {
+                if (typeof t === 'string') return t;
+                if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+                if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+                return String(t);
+              }) : [],
+              growth_opportunities: Array.isArray(rep.growth_opportunities) ? rep.growth_opportunities.map(t => {
+                if (typeof t === 'string') return t;
+                if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+                if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+                return String(t);
+              }) : [],
+              threats: Array.isArray(rep.threats) ? rep.threats.map(t => {
+                if (typeof t === 'string') return t;
+                if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+                if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+                return String(t);
+              }) : [],
+              strategic_moves: Array.isArray(rep.strategic_moves) ? rep.strategic_moves.map(t => {
+                if (typeof t === 'string') return t;
+                if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+                if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+                if (typeof t === 'object' && t !== null && 'move' in t) return (t as any).move;
+                if (typeof t === 'object' && t !== null && 'description' in t) return (t as any).description;
+                return String(t);
+              }) : [],
+              tools_to_watch: Array.isArray(rep.tools_to_watch) ? rep.tools_to_watch.map(t => {
+                if (typeof t === 'string') return t;
+                if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+                if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+                return String(t);
+              }) : [],
+              hiring_signals: Array.isArray(rep.hiring_signals) ? rep.hiring_signals.map(t => {
+                if (typeof t === 'string') return t;
+                if (typeof t === 'object' && t !== null && 'title' in t) return (t as any).title;
+                if (typeof t === 'object' && t !== null && 'name' in t) return (t as any).name;
+                return String(t);
+              }) : [],
+            };
+            
+            writeCache(r, "report", sanitizedRep);
+            writeCache(r, "trends", trnd);
+            writeCache(r, "competitors", comp);
+            setState(s => ({
+              ...s,
+              report: sanitizedRep, trends: trnd, competitors: comp,
+              loading: false, error: null, lastSync: now(),
+            }));
+          } else {
+            throw new Error("Invalid API response format");
+          }
         } catch (e) {
           setState(s => ({ ...s, loading: false, error: (e as Error).message }));
         }

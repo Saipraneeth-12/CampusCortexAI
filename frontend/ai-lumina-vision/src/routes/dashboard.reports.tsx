@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Download, Zap, Flame, ExternalLink, Clock, AlertTriangle,
@@ -113,6 +113,12 @@ function Reports() {
   const meta = ROLE_META[role];
   const { report, loading, error, refreshReport } = useData();
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Set client flag on mount to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleDownload = async () => {
     setPdfLoading(true);
@@ -145,8 +151,8 @@ function Reports() {
           </p>
           <h1 className="font-display text-3xl font-bold md:text-4xl">Morning Pulse Report</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Powered by Google Gemini · 3 live sources
-            {report?._cached_at && (
+            {isClient ? new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "—"} · Powered by Groq AI · 3 live sources
+            {isClient && report?._cached_at && (
               <span className="ml-2 text-muted-foreground/60">· cached {report._cached_at}</span>
             )}
           </p>
@@ -176,7 +182,7 @@ function Reports() {
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="flex-1 max-w-2xl">
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">Executive Summary</p>
-            {loading ? (
+            {loading || !isClient ? (
               <div className="space-y-2">
                 <div className="h-4 w-3/4 rounded bg-white/10 animate-pulse" />
                 <div className="h-4 w-2/3 rounded bg-white/10 animate-pulse" />
@@ -296,7 +302,7 @@ function Reports() {
                 {s.items.slice(0, 5).map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full" style={{ background: s.color }} />
-                    {item}
+                    <span>{typeof item === 'string' ? item : String(item)}</span>
                   </li>
                 ))}
               </ul>

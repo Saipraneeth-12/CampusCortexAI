@@ -70,7 +70,8 @@ function Recs() {
   const { actionPlan: planData, loading: globalLoading, ensureActionPlan } = useData();
   const [planLoading, setPlanLoading] = useState(false);
 
-  const actionPlan = planData?.tasks ?? [];
+  // Safely extract tasks from planData, ensuring it's an array
+  const actionPlan = Array.isArray(planData?.tasks) ? planData.tasks : [];
 
   // Fetch action plan lazily — only if not already cached
   useEffect(() => {
@@ -78,7 +79,7 @@ function Recs() {
       setPlanLoading(true);
       ensureActionPlan().finally(() => setPlanLoading(false));
     }
-  }, [role]);
+  }, [role, planData, globalLoading]);
 
   const isLoading = planLoading || (globalLoading && !planData);
 
@@ -128,12 +129,20 @@ function Recs() {
         {/* Show full recommendation cards */}
         <div className="grid gap-4 lg:grid-cols-2">
           {(actionPlan.length > 0 ? actionPlan : recs).map((item: any, i: number) => {
-            const r = actionPlan.length > 0 ? item : item;
-            const isRealData = actionPlan.length > 0;
+            // Normalize the item structure to handle both API and hardcoded data
+            const r = {
+              title: item.title || "",
+              description: item.description || item.desc || "",
+              urgency: item.urgency || "Medium",
+              eta: item.eta || "—",
+              tags: item.tags || [],
+              color: item.color || "oklch(0.7 0.24 255)",
+              day: item.day || "",
+            };
             
             return (
               <motion.div
-                key={isRealData ? item.title : item.title}
+                key={`${i}-${r.title}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
@@ -152,10 +161,10 @@ function Recs() {
                   </div>
                 </div>
                 <h3 className="mt-3 font-display text-lg font-semibold leading-tight">{r.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{r.description || r.desc}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{r.description}</p>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap gap-2">
-                    {r.tags.map((t: string) => (
+                    {Array.isArray(r.tags) && r.tags.map((t: string) => (
                       <span key={t} className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-semibold">
                         {t}
                       </span>

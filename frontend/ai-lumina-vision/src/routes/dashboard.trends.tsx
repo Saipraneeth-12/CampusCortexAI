@@ -1,16 +1,11 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  TrendingUp, Brain, ArrowUpRight, ArrowDownRight, RefreshCw,
-  Newspaper, Clock, Zap, Target, ExternalLink, Lightbulb,
-  Filter, ChevronDown, AlertTriangle, CheckCircle,
+  Brain, ArrowUpRight, ArrowDownRight,
+  Newspaper, Clock, Zap, ExternalLink,
 } from "lucide-react";
-import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
-  ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
-} from "recharts";
-import { useRole, ROLE_META } from "@/context/RoleContext";
+import { useRole } from "@/context/RoleContext";
 import { useData } from "@/context/DataContext";
 import type { Trend, TopArticle } from "@/lib/api";
 
@@ -20,14 +15,6 @@ export const Route = createFileRoute("/dashboard/trends")({
 });
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
-const CHART_COLORS = [
-  "oklch(0.7 0.24 255)",
-  "oklch(0.72 0.27 340)",
-  "oklch(0.85 0.18 200)",
-  "oklch(0.78 0.2 155)",
-];
-const TIME_FILTERS = ["7d", "30d"] as const;
-const CATEGORY_FILTERS = ["All", "AI", "LMS", "Teachers", "Parents", "SaaS"] as const;
 
 const BUILD_SUGGESTIONS: Record<string, { build: string; roi: string; icon: string }> = {
   "AI Tutoring":       { build: "Auto-evaluation module with AI feedback for students", roi: "High", icon: "🤖" },
@@ -61,24 +48,6 @@ function getSuggestion(name: string) {
   };
 }
 
-function buildWeeklyChart(trends: Trend[]) {
-  return DAYS.map((day, i) => {
-    const row: Record<string, string | number> = { day };
-    trends.slice(0, 4).forEach((t) => {
-      const activity = t.weekly_activity ?? t.forecast ?? [];
-      row[t.name] = activity[i] ?? 0;
-    });
-    return row;
-  });
-}
-
-function buildAreaChart(trend: Trend) {
-  return DAYS.map((day, i) => ({
-    day,
-    value: (trend.weekly_activity ?? trend.forecast ?? [])[i] ?? 0,
-  }));
-}
-
 function computeTrendScore(trend: Trend): number {
   const activity = trend.weekly_activity ?? trend.forecast ?? [];
   const avg = activity.reduce((a, b) => a + b, 0) / Math.max(activity.length, 1);
@@ -101,19 +70,6 @@ function SkeletonCard() {
           <div key={i} className="flex-1 rounded-sm bg-white/10" />
         ))}
       </div>
-    </div>
-  );
-}
-
-function SkeletonRow() {
-  return (
-    <div className="glass rounded-xl p-4 flex items-center gap-4 animate-pulse">
-      <div className="h-8 w-8 rounded-lg bg-white/10 shrink-0" />
-      <div className="flex-1 space-y-2">
-        <div className="h-3 w-3/4 rounded bg-white/10" />
-        <div className="h-2 w-1/2 rounded bg-white/10" />
-      </div>
-      <div className="h-5 w-12 rounded-full bg-white/10" />
     </div>
   );
 }

@@ -323,7 +323,7 @@ function Overview() {
               </span>
             </div>
           </div>
-          <div className="h-[280px]">
+          <div className="h-[280px] min-h-[280px]">
             {loading ? (
               <div className="h-full rounded-xl bg-white/5 animate-pulse" />
             ) : (
@@ -355,7 +355,7 @@ function Overview() {
         <div className="glass neon-border rounded-2xl p-5">
           <h3 className="font-display text-lg font-semibold">AI Confidence</h3>
           <p className="text-xs text-muted-foreground">Based on data richness</p>
-          <div className="relative mt-2 h-[220px]">
+          <div className="relative mt-2 h-[220px] min-h-[220px]">
             {loading ? (
               <div className="h-full rounded-xl bg-white/5 animate-pulse" />
             ) : (
