@@ -145,7 +145,7 @@ export function DashboardLayout() {
               </div>
               <span className="text-xs font-medium">AI Engine Online</span>
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">3 sources · Gemini 12-model chain</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">3 sources · Groq 2-model chain</p>
           </div>
 
           {/* ── Send Mail Panel ── */}

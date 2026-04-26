@@ -216,7 +216,7 @@ function Overview() {
     })),
   ].slice(0, 5);
 
-  // Executive brief bullets from real Gemini output
+  // Executive brief bullets from real Groq output
   const freshBullets    = toBullets(report?.fresh?.daily_brief ?? "", 3);
   const trendingBullets = toBullets(report?.trending?.daily_brief ?? "", 2);
 
@@ -472,7 +472,7 @@ function Overview() {
         </div>
       </div>
 
-      {/* ── Executive Brief — bullet points from real Gemini output ── */}
+      {/* ── Executive Brief — bullet points from real Groq output ── */}
       {(freshBullets.length > 0 || trendingBullets.length > 0) && (
         <div className="glass neon-border rounded-2xl p-5">
           <h3 className="font-display text-lg font-semibold mb-3">Today's Executive Brief</h3>

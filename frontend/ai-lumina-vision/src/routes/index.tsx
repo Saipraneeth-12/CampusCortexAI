@@ -10,7 +10,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Campus Cortex AI — Morning Pulse Market Intelligence" },
-      { name: "description", content: "Autonomous real-time market intelligence for EdTech professionals. Powered by Google Gemini, 3 live news sources, and role-specific AI analysis." },
+      { name: "description", content: "Autonomous real-time market intelligence for EdTech professionals. Powered by Groq AI, 3 live news sources, and role-specific AI analysis." },
     ],
   }),
   component: Landing,
@@ -50,7 +50,7 @@ function Landing() {
             </h1>
 
             <p className="mt-6 max-w-xl text-base text-muted-foreground md:text-lg">
-              Campus Cortex AI scrapes live news from 3 sources, processes it through Gemini AI, and delivers a personalized daily intelligence report — customized to your professional role.
+              Campus Cortex AI scrapes live news from 3 sources, processes it through Groq AI, and delivers a personalized daily intelligence report — customized to your professional role.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -67,7 +67,7 @@ function Landing() {
             <div className="mt-12 grid max-w-lg grid-cols-3 gap-6">
               {[
                 { v: 3, suffix: " sources", label: "Live news feeds" },
-                { v: 12, suffix: " models", label: "Gemini fallback chain" },
+                { v: 2, suffix: " models", label: "Groq fallback chain" },
                 { v: 5, suffix: " roles", label: "Role-specific AI" },
               ].map((s) => (
                 <div key={s.label}>
@@ -89,7 +89,7 @@ function Landing() {
             <HeroGlobe />
             <FloatingChip className="left-2 top-8" delay={0.8} icon={<Zap className="h-3.5 w-3.5" />} label="48h fresh news" color="cyan" />
             <FloatingChip className="right-4 top-32" delay={1.0} icon={<Radar className="h-3.5 w-3.5" />} label="10 competitors" color="purple" />
-            <FloatingChip className="bottom-24 left-6" delay={1.2} icon={<Sparkles className="h-3.5 w-3.5" />} label="Gemini AI 94%" color="blue" />
+            <FloatingChip className="bottom-24 left-6" delay={1.2} icon={<Sparkles className="h-3.5 w-3.5" />} label="Groq AI 94%" color="blue" />
             <FloatingChip className="bottom-12 right-8" delay={1.4} icon={<MessageSquare className="h-3.5 w-3.5" />} label="AI Chatbot" color="cyan" />
           </motion.div>
         </div>
@@ -254,7 +254,7 @@ function FloatingChip({ className, icon, label, delay = 0, color }: {
 const features = [
   { icon: Newspaper, title: "Morning Pulse Report", desc: "Daily AI-generated intelligence split into 48h fresh news and 2–14d trending stories, with urgency scores and recommended actions." },
   { icon: Radar, title: "Competitor Radar", desc: "Track 10 EdTech competitors — Byju's, Coursera, Duolingo, and more — with AI-generated counter-strategies for your role." },
-  { icon: TrendingUp, title: "Trend Forecast", desc: "12-month demand projections for your role's key signals, powered by Gemini AI with confidence scores." },
+  { icon: TrendingUp, title: "Trend Forecast", desc: "Real-time demand projections for your role's key signals, powered by Groq AI with confidence scores." },
   { icon: Brain, title: "AI Recommendations", desc: "Strategic next moves ranked by urgency × impact × confidence, with a 7-day action plan tailored to your role." },
   { icon: MessageSquare, title: "AI Chatbot", desc: "Ask anything about today's market intelligence, competitor moves, or trends — your AI assistant knows your role." },
   { icon: Zap, title: "PDF Intelligence Report", desc: "Download a premium 8-section PDF with executive summary, priority articles, growth opportunities, and market signals dashboard." },

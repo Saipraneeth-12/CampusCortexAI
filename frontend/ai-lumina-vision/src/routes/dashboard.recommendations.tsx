@@ -189,7 +189,7 @@ function Recs() {
           <div className="h-2 w-2 rounded-full bg-[oklch(0.85_0.18_200)] shadow-[0_0_6px_oklch(0.85_0.18_200)]" />
           <h2 className="font-display text-lg font-semibold">AI Market Advisor</h2>
           <span className="rounded-full bg-[oklch(0.7_0.24_255/0.15)] px-2.5 py-0.5 text-[10px] font-bold text-[oklch(0.85_0.18_200)]">
-            Powered by Gemini · Live Report
+            Powered by Groq · Live Report
           </span>
         </div>
         <InlineChatbot />

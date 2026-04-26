@@ -26,7 +26,7 @@ function ChatbotPage() {
         </div>
         <div className="flex items-center gap-2 glass rounded-xl px-3 py-2 text-xs">
           <Bot className="h-3.5 w-3.5 text-[oklch(0.85_0.18_200)]" />
-          <span>Powered by Gemini</span>
+          <span>Powered by Groq</span>
           <span className="h-1 w-1 rounded-full bg-border" />
           <Sparkles className="h-3.5 w-3.5 text-[oklch(0.7_0.24_255)]" />
           <span>Live context</span>

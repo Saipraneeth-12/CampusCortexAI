@@ -230,13 +230,13 @@ function Settings() {
             </div>
             <h3 className="font-display text-lg font-semibold">AI Engine</h3>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">Google Gemini with 12-model fallback chain. Auto-switches on quota limits.</p>
+          <p className="text-sm text-muted-foreground mb-4">Groq AI with 2-model fallback chain. Auto-switches on rate limits.</p>
           <div className="space-y-2">
-            {["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-flash-lite-latest"].map((m, i) => (
+            {["llama-3.3-70b-versatile", "llama-3.1-8b-instant"].map((m, i) => (
               <div key={m} className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
                 <span className="text-xs font-mono">{m}</span>
                 <span className={`text-[10px] font-semibold ${i === 0 ? "text-[oklch(0.78_0.2_155)]" : "text-muted-foreground"}`}>
-                  {i === 0 ? "Active" : `Fallback ${i}`}
+                  {i === 0 ? "Active" : "Fallback"}
                 </span>
               </div>
             ))}
@@ -253,7 +253,7 @@ function Settings() {
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              { label: "Gemini API Key", value: "AIzaSyD7Az9A••••••••" },
+              { label: "Groq API Key", value: "gsk_xnJHpFJy••••••••" },
               { label: "Guardian API Key", value: "03dd05e6-f19d-••••" },
               { label: "NewsData.io Key", value: "pub_4c3e2fad••••" },
             ].map((k) => (

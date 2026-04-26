@@ -30,7 +30,7 @@ const BUILD_SUGGESTIONS: Record<string, { build: string; roi: string; icon: stri
   "AI Agents":         { build: "Autonomous task agent framework for EdTech workflows", roi: "High", icon: "🤖" },
   "Voice Interfaces":  { build: "Voice-first tutoring interface for mobile learners", roi: "High", icon: "🎙️" },
   "No-Code AI":        { build: "Drag-and-drop AI workflow builder for educators", roi: "Medium", icon: "🔧" },
-  "AI-Native SaaS":    { build: "AI-first SaaS boilerplate with Gemini integration", roi: "High", icon: "🚀" },
+  "AI-Native SaaS":    { build: "AI-first SaaS boilerplate with Groq integration", roi: "High", icon: "🚀" },
   "Vertical AI":       { build: "Domain-specific AI model fine-tuning pipeline", roi: "High", icon: "📊" },
   "Streaming-First":   { build: "Real-time data pipeline with Kafka + Flink", roi: "Medium", icon: "🌊" },
   "Lakehouse Pattern": { build: "Unified lakehouse architecture starter kit", roi: "Medium", icon: "🏗️" },
