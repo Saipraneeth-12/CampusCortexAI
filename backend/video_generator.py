@@ -14,8 +14,13 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+try:
+    import numpy as np
+    from PIL import Image, ImageDraw, ImageFont
+    _PIL_AVAILABLE = True
+except ImportError:
+    _PIL_AVAILABLE = False
+    print("[video_generator] PIL/numpy not available — video generation disabled")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 VIDEO_OUTPUT_DIR = Path(__file__).parent / "generated_videos"
@@ -413,6 +418,9 @@ def _merge_audio(video_path: str, audio_path: str, out_path: str) -> bool:
 # ── Public entry point ────────────────────────────────────────────────────────
 
 def generate_briefing_video(role: str, report_data: dict) -> dict:
+    if not _PIL_AVAILABLE:
+        return {"success": False, "error": "Video generation dependencies not installed on this server."}
+
     tmp = tempfile.mkdtemp(prefix="mp_video_")
     try:
         print(f"[video_generator] Starting for {role}")
@@ -467,3 +475,6 @@ def generate_briefing_video(role: str, report_data: dict) -> dict:
         shutil.rmtree(tmp, ignore_errors=True)
         import traceback; traceback.print_exc()
         return {"success": False, "error": str(e)}
+
+# Alias used by api.py
+generate_video = generate_briefing_video

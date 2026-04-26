@@ -4,11 +4,7 @@ Context-aware chatbot that answers questions about the live report.
 Uses Groq AI for intelligent responses.
 """
 import os
-import google.generativeai as genai
-from groq_processor import _try_all_models   # shared quota tracking
-
-API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyATBCBbduInSpu3-OiMagrfWeQLxkocKpg")
-genai.configure(api_key=API_KEY)
+from groq_processor import _try_all_models
 
 
 def _build_context(role: str, report: dict, competitors: dict) -> str:
@@ -79,16 +75,7 @@ LIVE REPORT DATA:
 {context}
 """
 
-    # Build conversation turns
-    conversation = []
-    for turn in history[-6:]:   # keep last 6 turns for context window
-        conversation.append({
-            "role":  turn["role"],
-            "parts": [turn["content"]],
-        })
-    conversation.append({"role": "user", "parts": [message]})
-
-    # Build full prompt with history + system context
+    # Build conversation turns for context
     history_text = ""
     for turn in history[-6:]:
         prefix = "User" if turn["role"] == "user" else "Advisor"
