@@ -1,5 +1,69 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Frontend - AI Lumina Vision .gitignore
+# ═══════════════════════════════════════════════════════════════════════════
 
-node_modules
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ── Build Output ──────────────────────────────────────────────────────────────
+dist/
+build/
+.cache/
+.next/
+out/
+*.tsbuildinfo
+
+# ── Environment Variables ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# ── IDE & Editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# ── Temporary Files ───────────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+.#*
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ── Vite ──────────────────────────────────────────────────────────────────────
+.vite/
+
+# ── Generated Files ───────────────────────────────────────────────────────────
 ffmpeg/
 __pycache__/
 *.pyc
@@ -7,4 +71,7 @@ __pycache__/
 *.m4a
 generated_videos/
 served_pdfs/
-.env
+
+# ── Tanstack & Build Tools ────────────────────────────────────────────────────
+.tanstack/
+.wrangler/

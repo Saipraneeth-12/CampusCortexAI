@@ -1,29 +1,122 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Campus Cortex AI - Morning Pulse .gitignore
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── External Dependencies ─────────────────────────────────────────────────────
 # FFmpeg source (cloned separately, not part of this repo)
 ffmpeg/
+ffmpeg-8.1/
 
-# Python
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.so
 .Python
 *.egg-info/
+*.egg
 dist/
 build/
-*.egg
-.env
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
 venv/
-.venv/
+env/
+ENV/
+.venv
+.env
+.env.local
+.env.*.local
 
-# Node
-node_modules/
-dist/
-.cache/
-
-# Generated files
-backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/generated_videos/
-backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/served_pdfs/
-
-# OS
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
+
+# ── Node/Frontend ─────────────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.cache/
+.next/
+out/
+*.tsbuildinfo
+
+# ── Generated Files ───────────────────────────────────────────────────────────
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/generated_videos/
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/served_pdfs/
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/*.mp4
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/*.m4a
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/*.pdf
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/Morning_Pulse_Report.json
+backend/Market-Intelligence---The-Morning-Pulse-AI-Engine-/backend/scheduled_role.json
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+*.log.*
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Temporary Files ───────────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.#*
+
+# ── Secrets & Credentials ─────────────────────────────────────────────────────
+# Never commit API keys, tokens, or credentials
+.env
+.env.local
+.env.*.local
+.env.production.local
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ── Project-Specific ─────────────────────────────────────────────────────────
+# Cache files
+.cache/
+*.cache
+
+# Database files (if using SQLite)
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.backup
+*.bak
+
+# OS-specific
+.vscode/settings.json
+.idea/workspace.xml

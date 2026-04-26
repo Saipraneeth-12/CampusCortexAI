@@ -3,7 +3,7 @@ import { RoleProvider } from "@/context/RoleContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ChatHistoryProvider } from "@/context/ChatHistoryContext";
 
-import appCss from "../styles.css?url";
+import appCss from "../styles/styles.css?url";
 
 function NotFoundComponent() {
   return (
